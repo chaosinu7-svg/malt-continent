@@ -4,9 +4,86 @@ import Base from '../layouts/Base.astro';
 import { withBase } from '../utils/withBase';
 import world from '../data/world.json';
 
+// 底图 16:9；SVG 用等比单位（宽 100 × 高 56.25），圆窗在任何尺寸下都不变形
+const VB_H = 56.25;
+const Y = (hPct: number) => (hPct * VB_H) / 100; // 高度百分比 → SVG 纵向单位
+
+// 经纬度 → 图面百分比投影（常数存 world.json，按 world-map.png 目检校准）
+const P = world.projection;
+const lonX = (lon: number) => {
+  const l = lon < P.wrapBelowLon ? lon + 360 : lon;
+  return P.x0 + (l - P.lonAnchor) * P.kx;
+};
+const latY = (lat: number) => P.y0 - P.ky * lat; // 高度百分比
+
 const distilleries = await getCollection('distilleries');
-// 只渲染有 map_pin 的酒厂（空集合 / 0 标点也允许）
-const pinned = distilleries.filter((d) => d.data.map_pin);
+
+// 每产区：真实位置小圆点 + 放大镜圆窗（bbox 线性映射钉位 + 防重叠微调 + 虚线引线）
+const regions = world.regions.map((r) => {
+  const ds = distilleries.filter((d) => d.data.region === r.id);
+  // 真实位置圆点（SVG 单位）；dot_offset 为该产区手绘陆块相对全局投影的目检校准偏移
+  const off = r.dot_offset ?? { dx: 0, dy: 0 };
+  const dots = ds.map((d) => ({
+    x: lonX(d.data.geo.lon) + off.dx,
+    y: Y(latY(d.data.geo.lat) + off.dy),
+  }));
+  const cx = r.loupe.x;
+  const cy = Y(r.loupe.y);
+  const rad = r.loupe.r;
+  // bbox → 圆窗内切正方形（留 15% 内边距），纬度向北为上需翻转
+  const half = rad * Math.SQRT1_2 * 0.85;
+  const { minLat, maxLat, minLon, maxLon } = r.bbox;
+  const pins = ds.map((d) => ({
+    id: d.data.id,
+    name: d.data.name,
+    dx: (((d.data.geo.lon - minLon) / (maxLon - minLon)) * 2 - 1) * half,
+    dy: -((((d.data.geo.lat - minLat) / (maxLat - minLat)) * 2 - 1) * half),
+  }));
+  // 任意两钉间距 < 圆窗直径 12% 时沿连线推开（迭代松弛），并夹回内切区域
+  const minGap = 2 * rad * 0.12;
+  for (let iter = 0; iter < 80; iter++) {
+    let moved = false;
+    for (let i = 0; i < pins.length; i++) {
+      for (let j = i + 1; j < pins.length; j++) {
+        const a = pins[i];
+        const b = pins[j];
+        let vx = b.dx - a.dx;
+        let vy = b.dy - a.dy;
+        let d = Math.hypot(vx, vy);
+        if (d >= minGap) continue;
+        if (d < 1e-6) {
+          vx = 1;
+          vy = 0.6;
+          d = Math.hypot(vx, vy);
+        }
+        const push = (minGap - d) / 2 / d;
+        a.dx -= vx * push;
+        a.dy -= vy * push;
+        b.dx += vx * push;
+        b.dy += vy * push;
+        moved = true;
+      }
+    }
+    for (const p of pins) {
+      p.dx = Math.max(-half, Math.min(half, p.dx));
+      p.dy = Math.max(-half, Math.min(half, p.dy));
+    }
+    if (!moved) break;
+  }
+  // 虚线引线：圆窗边缘 → 产区真实位置（在圆点群质心前收笔，不压圆点）
+  const gx = dots.reduce((s, p) => s + p.x, 0) / (dots.length || 1);
+  const gy = dots.reduce((s, p) => s + p.y, 0) / (dots.length || 1);
+  const ux = gx - cx;
+  const uy = gy - cy;
+  const len = Math.hypot(ux, uy) || 1;
+  const leader = {
+    x1: cx + (ux / len) * rad,
+    y1: cy + (uy / len) * rad,
+    x2: gx - (ux / len) * 1.5,
+    y2: gy - (uy / len) * 1.5,
+  };
+  return { ...r, dots, cx, cy, rad, pins, leader };
+});
 ---
 
 <Base showLegend={true}>
@@ -15,52 +92,82 @@ const pinned = distilleries.filter((d) => d.data.map_pin);
       <div class="map-inner">
         <img
           class="map-base"
-          src={withBase('/assets/map/world-map.svg')}
+          src={withBase('/assets/map/world-map.png')}
           alt="麦芽大陆手绘世界地图"
         />
-        <!-- 产区多边形热区（百分比坐标，preserveAspectRatio=none 与底图对齐） -->
+        <!-- 放大镜圆窗层：与底图同 viewBox，随地图缩放 -->
         <svg
           class="map-overlay"
-          viewBox="0 0 100 100"
-          preserveAspectRatio="none"
-          aria-label="产区热区"
+          viewBox={`0 0 100 ${VB_H}`}
+          aria-label="产区放大镜圆窗"
         >
           {
-            world.regions.map((r) => (
+            regions.map((r) => (
+              <g>
+                <line
+                  class="leader"
+                  x1={r.leader.x1}
+                  y1={r.leader.y1}
+                  x2={r.leader.x2}
+                  y2={r.leader.y2}
+                />
+                <circle class="loupe-glass" cx={r.cx} cy={r.cy} r={r.rad} />
+                <circle class="loupe-inner" cx={r.cx} cy={r.cy} r={r.rad - 0.55} />
+              </g>
+            ))
+          }
+          <!-- 每家酒厂真实位置的琥珀小圆点（非交互） -->
+          {
+            regions.map((r) =>
+              r.dots.map((p) => <circle class="geo-dot" cx={p.x} cy={p.y} r="0.36" />)
+            )
+          }
+          {
+            regions.map((r) => (
               <a href={withBase(`/region/${r.id}`)} aria-label={`前往产区：${r.name}`}>
-                <polygon points={r.polygon.map((p) => p.join(',')).join(' ')}>
-                  <title>{r.name}</title>
-                </polygon>
+                <text
+                  class="loupe-title"
+                  x={r.cx}
+                  y={r.cy - r.rad + 2.2}
+                  text-anchor="middle"
+                >
+                  {r.name}
+                </text>
               </a>
             ))
           }
         </svg>
-        <!-- 产区名点击热区（盖在底图大字标签上） -->
+        <!-- 产区名标签（贴在产区陆块旁，点击进图鉴） -->
         {
-          world.regions.map((r) => (
+          regions.map((r) => (
             <a
-              class="region-label-hit"
+              class="region-label"
               style={`left:${r.label_pos.x}%;top:${r.label_pos.y}%;`}
               href={withBase(`/region/${r.id}`)}
               aria-label={`产区：${r.name}`}
-            />
-          ))
-        }
-        <!-- 酒厂标点（map_pin 百分比坐标） -->
-        {
-          pinned.map((d) => (
-            <a
-              class="pin"
-              style={`left:${d.data.map_pin!.x}%;top:${d.data.map_pin!.y}%;`}
-              href={withBase(`/distillery/${d.data.id}`)}
             >
-              <span class="pin-dot" />
-              <span class="pin-name">{d.data.name}</span>
+              {r.name}
             </a>
           ))
         }
+        <!-- 圆窗内酒厂图钉（geo 实时计算，悬停显名，点击直达酒厂） -->
+        {
+          regions.map((r) =>
+            r.pins.map((p) => (
+              <a
+                class="pin"
+                style={`left:${r.cx + p.dx}%;top:${((r.cy + p.dy) / VB_H) * 100}%;`}
+                href={withBase(`/distillery/${p.id}`)}
+                aria-label={`酒厂：${p.name}`}
+              >
+                <span class="pin-dot" />
+                <span class="pin-name">{p.name}</span>
+              </a>
+            ))
+          )
+        }
       </div>
     </div>
-    <p class="map-hint">—— 点产区名进图鉴 · 点图钉直达酒厂 · 手机可左右拖动地图 ——</p>
+    <p class="map-hint">—— 点产区名进图鉴 · 圆窗内点图钉直达酒厂 · 手机可左右拖动地图 ——</p>
   </main>
 </Base>
