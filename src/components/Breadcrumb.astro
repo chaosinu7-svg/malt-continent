@@ -1,0 +1,28 @@
+---
+import { withBase } from '../utils/withBase';
+
+interface Crumb {
+  label: string;
+  /** 站内路径（不含 base），最后一级省略 href */
+  href?: string;
+}
+interface Props {
+  items: Crumb[];
+}
+const { items } = Astro.props;
+---
+
+<nav class="breadcrumb" aria-label="面包屑">
+  {
+    items.map((item, i) => (
+      <>
+        {i > 0 && <span class="sep">›</span>}
+        {item.href ? (
+          <a href={withBase(item.href)}>{item.label}</a>
+        ) : (
+          <span class="current">{item.label}</span>
+        )}
+      </>
+    ))
+  }
+</nav>

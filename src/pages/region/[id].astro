@@ -1,0 +1,106 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import Breadcrumb from '../../components/Breadcrumb.astro';
+import { withBase } from '../../utils/withBase';
+
+export async function getStaticPaths() {
+  const regions = await getCollection('regions');
+  return regions.map((region) => ({
+    params: { id: region.data.id },
+    props: { region },
+  }));
+}
+
+const { region } = Astro.props;
+const { Content } = await region.render();
+
+const allDistilleries = await getCollection('distilleries');
+const distilleries = allDistilleries.filter((d) => d.data.region === region.data.id);
+
+const subRegions = region.data.sub_regions ?? [];
+const placeholder = withBase('/assets/placeholder.svg');
+const bannerSrc = region.data.banner_image
+  ? withBase(region.data.banner_image)
+  : withBase(`/assets/regions/${region.data.id}-banner.png`);
+const onerr = `this.onerror=null;this.src='${placeholder}';`;
+---
+
+<Base title={region.data.name}>
+  <main class="container">
+    <Breadcrumb items={[{ label: '地图', href: '/' }, { label: region.data.name }]} />
+
+    <div class="region-banner">
+      <img src={bannerSrc} alt={`${region.data.name}产区横幅`} onerror={onerr} />
+    </div>
+
+    <header class="region-head">
+      <h1>{region.data.name}</h1>
+      <p>
+        <span class="en">{region.data.name_en}</span>
+        <span class="tagline">「{region.data.tagline}」</span>
+      </p>
+      <div class="chip-row" style="justify-content:flex-start;">
+        {region.data.style_tags.map((t) => <span class="chip">{t}</span>)}
+      </div>
+    </header>
+
+    <article class="prose">
+      <Content />
+    </article>
+
+    {
+      subRegions.length > 0 && (
+        <div class="tag-row" id="sub-tags">
+          <button class="sub-tag active" data-sub="all">全部</button>
+          {subRegions.map((s) => (
+            <button class="sub-tag" data-sub={s.id}>{s.name}</button>
+          ))}
+        </div>
+      )
+    }
+
+    {
+      distilleries.length > 0 ? (
+        <div class="card-grid" id="distillery-grid">
+          {distilleries.map((d) => (
+            <a
+              class="d-card codex-frame"
+              data-sub={d.data.sub_region ?? ''}
+              href={withBase(`/distillery/${d.data.id}`)}
+            >
+              <img
+                src={withBase(d.data.portrait_image ?? `/assets/distilleries/${d.data.id}.png`)}
+                alt={d.data.name}
+                loading="lazy"
+                onerror={onerr}
+              />
+              <div class="d-name">{d.data.name}</div>
+              <div class="d-en">{d.data.name_en}</div>
+              <div class="chip-row">
+                {d.data.style_tags.map((t) => <span class="chip">{t}</span>)}
+              </div>
+            </a>
+          ))}
+        </div>
+      ) : (
+        <div class="empty-note codex-frame">图鉴编纂中……此地的酒厂尚待探索。</div>
+      )
+    }
+  </main>
+</Base>
+
+<script>
+  // 子产区标签纯前端筛选
+  const tags = document.querySelectorAll<HTMLButtonElement>('.sub-tag');
+  const cards = document.querySelectorAll<HTMLElement>('.d-card');
+  tags.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const v = btn.dataset.sub;
+      tags.forEach((b) => b.classList.toggle('active', b === btn));
+      cards.forEach((c) => {
+        c.style.display = v === 'all' || c.dataset.sub === v ? '' : 'none';
+      });
+    });
+  });
+</script>

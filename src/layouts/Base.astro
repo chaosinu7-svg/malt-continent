@@ -1,0 +1,54 @@
+---
+import '../styles/global.css';
+import { withBase } from '../utils/withBase';
+import { SITE_NAME } from '../utils/site';
+
+interface Props {
+  title?: string;
+  /** 是否在顶栏右侧显示「图例」弹层（首页用） */
+  showLegend?: boolean;
+}
+const { title, showLegend = false } = Astro.props;
+const pageTitle = title ? `${title} · ${SITE_NAME}` : SITE_NAME;
+---
+
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="generator" content={Astro.generator} />
+    <title>{pageTitle}</title>
+    <link rel="icon" href={withBase('/assets/placeholder.svg')} type="image/svg+xml" />
+    <!-- 霞鹜文楷（标题/手写标注用），media=print + onload 切换，不阻塞渲染 -->
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/lxgw-wenkai-screen-webfont@1.7.0/style.css"
+      media="print"
+      onload="this.media='all'"
+    />
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="logo" href={withBase('/')}>{SITE_NAME}</a>
+      {
+        showLegend && (
+          <details class="legend">
+            <summary>图例</summary>
+            <div class="legend-pop">
+              <h3>珍稀度五档</h3>
+              <ul>
+                <li><span class="stars">★☆☆☆☆</span>日常口粮</li>
+                <li><span class="stars">★★☆☆☆</span>进阶之选</li>
+                <li><span class="stars">★★★☆☆</span>稀有</li>
+                <li><span class="stars">★★★★☆</span>珍藏</li>
+                <li><span class="stars">★★★★★</span>传说</li>
+              </ul>
+            </div>
+          </details>
+        )
+      }
+    </header>
+    <slot />
+  </body>
+</html>

@@ -1,0 +1,7 @@
+node_modules/
+dist/
+.astro/
+.DS_Store
+
+# 内容初稿暂存区（另一工具写入，整合阶段移入 src/content/ 后删除，不入库）
+content-staging/

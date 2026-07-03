@@ -1,0 +1,411 @@
+/* ============================================
+   麦芽大陆 · 迷宫饭手绘图鉴风主题
+   姊妹站换皮：改这里的自定义属性即可
+   ============================================ */
+:root {
+  --parchment: #f4e9cd;        /* 羊皮纸底 */
+  --parchment-deep: #eadcb4;   /* 深一层纸色 */
+  --paper-card: #faf2dc;       /* 卡片纸面 */
+  --ink: #4a3524;              /* 深褐墨线 */
+  --ink-soft: #7a6248;         /* 浅墨 */
+  --amber: #c8861b;            /* 琥珀强调 */
+  --amber-deep: #a56a10;
+  --font-hand: 'LXGW WenKai', 'LXGW WenKai Screen', 'Kaiti SC', 'STKaiti', 'KaiTi', serif;
+  --font-body: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Hiragino Sans GB',
+    'Microsoft YaHei', 'Noto Sans CJK SC', sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  color: var(--ink);
+  font-family: var(--font-body);
+  line-height: 1.75;
+  background-color: var(--parchment);
+  background-image:
+    radial-gradient(ellipse at 18% 12%, rgba(122, 98, 72, 0.08), transparent 42%),
+    radial-gradient(ellipse at 82% 88%, rgba(122, 98, 72, 0.09), transparent 45%),
+    radial-gradient(ellipse at 65% 25%, rgba(200, 134, 27, 0.05), transparent 40%);
+  min-height: 100vh;
+}
+
+a { color: inherit; }
+img { max-width: 100%; display: block; }
+
+h1, h2, h3, .hand { font-family: var(--font-hand); }
+
+.container { max-width: 1080px; margin: 0 auto; padding: 0 16px; }
+
+/* ---------- 顶栏 ---------- */
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 18px;
+  border-bottom: 3px double var(--ink);
+  background: var(--parchment-deep);
+}
+.topbar .logo {
+  font-family: var(--font-hand);
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-decoration: none;
+  color: var(--ink);
+}
+.topbar .logo::before { content: '❦ '; color: var(--amber); }
+
+/* 图例弹层 */
+.legend { position: relative; }
+.legend summary {
+  cursor: pointer;
+  list-style: none;
+  font-family: var(--font-hand);
+  font-size: 1.05rem;
+  padding: 4px 14px;
+  border: 1.5px dashed var(--ink-soft);
+  border-radius: 6px;
+  background: var(--paper-card);
+  user-select: none;
+}
+.legend summary::-webkit-details-marker { display: none; }
+.legend[open] summary { border-style: solid; color: var(--amber-deep); }
+.legend-pop {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  z-index: 50;
+  width: 230px;
+  padding: 12px 14px;
+  background: var(--paper-card);
+  border: 2px dashed var(--ink-soft);
+  border-radius: 8px;
+  box-shadow: 3px 4px 0 rgba(74, 53, 36, 0.18);
+}
+.legend-pop h3 { margin: 0 0 6px; font-size: 1rem; border-bottom: 1px dashed var(--ink-soft); padding-bottom: 4px; }
+.legend-pop ul { margin: 0; padding: 0; list-style: none; font-size: 0.9rem; }
+.legend-pop li { display: flex; gap: 8px; padding: 2px 0; }
+.legend-pop .stars { color: var(--amber); letter-spacing: 1px; min-width: 5.2em; }
+
+/* ---------- 面包屑 ---------- */
+.breadcrumb {
+  font-family: var(--font-hand);
+  font-size: 0.98rem;
+  padding: 12px 0;
+  color: var(--ink-soft);
+}
+.breadcrumb a { color: var(--ink-soft); text-decoration: none; border-bottom: 1px dashed var(--ink-soft); }
+.breadcrumb a:hover { color: var(--amber-deep); border-bottom-color: var(--amber-deep); }
+.breadcrumb .sep { margin: 0 6px; color: var(--amber); }
+.breadcrumb .current { color: var(--ink); }
+
+/* ---------- 图鉴框（手绘虚线框）---------- */
+.codex-frame {
+  background: var(--paper-card);
+  border: 2px dashed var(--ink-soft);
+  border-radius: 10px;
+  padding: 16px;
+  box-shadow: 3px 4px 0 rgba(74, 53, 36, 0.14);
+}
+
+/* ---------- 首页地图 ---------- */
+.map-scroll {
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+.map-inner {
+  position: relative;
+  min-width: 760px;
+  aspect-ratio: 16 / 9;
+  margin: 0 auto;
+  max-width: 1400px;
+}
+.map-inner > img.map-base {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.map-overlay {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.map-overlay polygon {
+  fill: rgba(200, 134, 27, 0);
+  stroke: transparent;
+  stroke-width: 2.5px;
+  vector-effect: non-scaling-stroke;
+  cursor: pointer;
+  transition: fill 0.2s, stroke 0.2s;
+  pointer-events: all;
+}
+.map-overlay a:hover polygon,
+.map-overlay a:focus polygon {
+  fill: rgba(200, 134, 27, 0.14);
+  stroke: var(--amber-deep);
+  stroke-dasharray: 6 4;
+}
+/* 产区名点击热区（盖在底图大字上，透明） */
+.region-label-hit {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  min-width: 96px;
+  min-height: 44px;
+  border-radius: 8px;
+  display: block;
+}
+.region-label-hit:hover { background: rgba(200, 134, 27, 0.12); outline: 1.5px dashed var(--amber-deep); }
+
+/* 酒厂标点 */
+.pin {
+  position: absolute;
+  transform: translate(-50%, -100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 32px;
+  min-height: 32px;
+  padding: 2px 4px;
+  text-decoration: none;
+  z-index: 10;
+  transition: transform 0.15s;
+}
+.pin .pin-dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50% 50% 50% 0;
+  transform: rotate(-45deg);
+  background: var(--amber);
+  border: 2px solid var(--ink);
+  box-shadow: 1px 2px 0 rgba(74, 53, 36, 0.35);
+}
+.pin .pin-name {
+  font-family: var(--font-hand);
+  font-size: 0.82rem;
+  margin-top: 3px;
+  padding: 0 5px;
+  background: rgba(250, 242, 220, 0.92);
+  border: 1px dashed var(--ink-soft);
+  border-radius: 4px;
+  white-space: nowrap;
+  color: var(--ink);
+}
+.pin:hover, .pin:focus {
+  transform: translate(-50%, -100%) scale(1.28);
+  z-index: 20;
+}
+.pin:hover .pin-dot, .pin:focus .pin-dot { background: var(--amber-deep); }
+.pin:hover .pin-name, .pin:focus .pin-name { border-color: var(--amber-deep); color: var(--amber-deep); }
+
+.map-hint {
+  text-align: center;
+  font-family: var(--font-hand);
+  color: var(--ink-soft);
+  font-size: 0.9rem;
+  padding: 8px 0 20px;
+}
+
+/* ---------- 产区页 ---------- */
+.region-banner { position: relative; margin: 8px 0 14px; }
+.region-banner img {
+  width: 100%;
+  height: 220px;
+  object-fit: cover;
+  border: 2px solid var(--ink);
+  border-radius: 10px;
+  background: var(--paper-card);
+}
+.region-head h1 { margin: 10px 0 2px; font-size: 2rem; }
+.region-head .en { color: var(--ink-soft); font-style: italic; margin-right: 10px; }
+.region-head .tagline { font-family: var(--font-hand); color: var(--amber-deep); font-size: 1.1rem; }
+
+.tag-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0; }
+.sub-tag {
+  font-family: var(--font-hand);
+  font-size: 0.95rem;
+  padding: 4px 14px;
+  background: var(--paper-card);
+  color: var(--ink);
+  border: 1.5px dashed var(--ink-soft);
+  border-radius: 999px;
+  cursor: pointer;
+}
+.sub-tag.active {
+  background: var(--amber);
+  color: #fff8e7;
+  border-style: solid;
+  border-color: var(--amber-deep);
+}
+
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin: 10px 0 40px;
+}
+.d-card {
+  display: block;
+  text-decoration: none;
+  text-align: center;
+  padding: 14px 12px;
+  transition: transform 0.15s;
+}
+.d-card:hover { transform: translateY(-3px) rotate(-0.4deg); border-color: var(--amber-deep); }
+.d-card img {
+  width: 96px;
+  height: 120px;
+  object-fit: contain;
+  margin: 0 auto 8px;
+  background: var(--parchment-deep);
+  border: 1.5px solid var(--ink-soft);
+  border-radius: 8px;
+}
+.d-card .d-name { font-family: var(--font-hand); font-size: 1.15rem; font-weight: 700; }
+.d-card .d-en { font-size: 0.8rem; color: var(--ink-soft); font-style: italic; }
+
+.chip-row { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin-top: 8px; }
+.chip {
+  font-size: 0.78rem;
+  padding: 1px 9px;
+  border: 1px solid var(--amber-deep);
+  color: var(--amber-deep);
+  border-radius: 999px;
+  background: rgba(200, 134, 27, 0.08);
+}
+
+/* ---------- 酒厂页 ---------- */
+.two-col { display: grid; grid-template-columns: 5fr 7fr; gap: 20px; align-items: start; margin: 12px 0 24px; }
+.portrait img, .bottle-fig > img {
+  width: 100%;
+  object-fit: contain;
+  background: var(--parchment-deep);
+  border: 2px solid var(--ink);
+  border-radius: 10px;
+}
+.portrait img { aspect-ratio: 4 / 5; }
+
+.dossier h2, .story h2, .series-block h2, .whisky-story h2 {
+  font-size: 1.25rem;
+  border-bottom: 2px dashed var(--ink-soft);
+  padding-bottom: 6px;
+}
+.dossier h2::before, .story h2::before, .series-block h2::before, .whisky-story h2::before {
+  content: '✦ ';
+  color: var(--amber);
+}
+.dossier table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
+.dossier th, .dossier td { text-align: left; padding: 7px 6px; border-bottom: 1px dashed var(--parchment-deep); vertical-align: top; }
+.dossier th { width: 6.5em; font-family: var(--font-hand); color: var(--ink-soft); font-weight: 600; white-space: nowrap; }
+
+.prose { font-size: 1rem; }
+.prose p { margin: 0.7em 0; }
+
+.series-block { margin: 26px 0; }
+.w-strip { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 14px; }
+.w-card { position: relative; display: block; text-decoration: none; text-align: center; padding: 12px 10px 14px; transition: transform 0.15s; }
+.w-card:hover { transform: translateY(-3px) rotate(0.4deg); }
+.w-card img {
+  width: 74px;
+  height: 112px;
+  object-fit: contain;
+  margin: 0 auto 6px;
+  background: var(--parchment-deep);
+  border: 1.5px solid var(--ink-soft);
+  border-radius: 6px;
+}
+.w-card .w-name { font-family: var(--font-hand); font-size: 1rem; font-weight: 700; }
+.w-card .star-badge {
+  position: absolute;
+  top: -8px;
+  right: -6px;
+  font-size: 0.78rem;
+  color: #fff8e7;
+  background: var(--amber);
+  border: 1.5px solid var(--ink);
+  border-radius: 999px;
+  padding: 1px 8px;
+  transform: rotate(6deg);
+  letter-spacing: 1px;
+}
+
+/* ---------- 单品页 ---------- */
+.bottle-fig { position: relative; padding: 34px 12px; }
+.bottle-fig > img { aspect-ratio: 2 / 3; max-height: 520px; margin: 0 auto; }
+.note {
+  position: absolute;
+  max-width: 9.5em;
+  font-family: var(--font-hand);
+  font-size: 0.88rem;
+  line-height: 1.45;
+  background: #fff7dd;
+  border: 1.5px dashed var(--amber-deep);
+  border-radius: 6px;
+  padding: 4px 9px;
+  box-shadow: 2px 3px 0 rgba(74, 53, 36, 0.15);
+  z-index: 5;
+}
+.note::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: 34px;
+  border-top: 2px dashed var(--amber-deep);
+}
+.note.left { left: 0; transform: rotate(-2.5deg); }
+.note.left::after { left: 100%; }
+.note.right { right: 0; transform: rotate(2deg); text-align: right; }
+.note.right::after { right: 100%; }
+
+.spec-table { width: 100%; border-collapse: collapse; font-size: 0.98rem; }
+.spec-table th, .spec-table td { text-align: left; padding: 8px 6px; border-bottom: 1px dashed var(--parchment-deep); }
+.spec-table th { width: 6em; font-family: var(--font-hand); color: var(--ink-soft); white-space: nowrap; }
+
+.rarity-box { margin-top: 16px; background: rgba(200, 134, 27, 0.07); }
+.rarity-box .stars { font-size: 1.4rem; color: var(--amber); letter-spacing: 3px; }
+.rarity-box .rank-title {
+  font-family: var(--font-hand);
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-left: 10px;
+  color: var(--amber-deep);
+}
+.rarity-box .reason { font-family: var(--font-hand); color: var(--ink-soft); margin-top: 4px; }
+.rarity-box .reason::before { content: '—— '; }
+
+.pager { display: flex; justify-content: space-between; gap: 12px; margin: 30px 0 46px; }
+.pager a {
+  font-family: var(--font-hand);
+  text-decoration: none;
+  padding: 8px 18px;
+  max-width: 46%;
+}
+.pager a:hover { color: var(--amber-deep); border-color: var(--amber-deep); }
+.pager .dir { color: var(--amber); }
+
+/* ---------- 空状态 ---------- */
+.empty-note {
+  text-align: center;
+  font-family: var(--font-hand);
+  color: var(--ink-soft);
+  padding: 40px 16px;
+  margin: 20px 0 40px;
+}
+
+/* ---------- 响应式（375px 无横向滚动，地图容器除外）---------- */
+@media (max-width: 820px) {
+  .card-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 640px) {
+  .two-col { grid-template-columns: 1fr; }
+  .card-grid { grid-template-columns: 1fr; }
+  .region-banner img { height: 150px; }
+  .bottle-fig { padding: 12px 0; display: flex; flex-direction: column; gap: 8px; }
+  .note, .note.left, .note.right { position: static; transform: none; max-width: none; text-align: left; }
+  .note::after { display: none; }
+}

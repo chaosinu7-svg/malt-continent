@@ -1,0 +1,138 @@
+# 麦芽大陆 · Codex 工作清单
+
+> 项目：迷宫饭漫画风的威士忌世界图鉴静态站（Astro）。完整 PRD 在 `~/Desktop/vibecoding-prd/麦芽大陆/PRD.md`，本清单自带执行所需的全部规格，可不读 PRD 直接开工。
+> 项目根目录：`~/Desktop/malt-continent/`
+
+## 现状盘点（2026-07-02）
+
+**已完成，不要动：**
+- 内容初稿（在 `content-staging/`，注意不是 src/content/）：6 个产区文件；6 家酒厂完整（麦卡伦/格兰菲迪/拉弗格/阿贝/格兰杰/欧肯特轩，各 3 款单品）；泰斯卡（2 款，疑似完整）
+- 引擎骨架：`src/` 下 schema、四类路由、布局已存在（可能个别文件是被打断时写了一半的）
+
+**待办分三个任务，A 是大头。**
+
+---
+
+## 任务 A：补写酒厂内容初稿（主任务）
+
+写入 `~/Desktop/malt-continent/content-staging/`（目录已存在）。**只写 content-staging 下的 Markdown，不碰项目其他文件。**
+
+### A1. 需要补齐的酒厂
+
+| 状态 | 酒厂 (id) | 产区 / 子产区 | 要做的事 |
+|---|---|---|---|
+| 半成品 | 云顶 springbank | scotland / campbeltown | 酒厂文件已有，检查补完；单品 0 款 → 补 2-3 款 |
+| 半成品 | 山崎 yamazaki | japan | 酒厂文件已有，检查补完；单品 0 款 → 补 2-3 款 |
+| 半成品 | 布什米尔 bushmills | ireland | 酒厂文件疑似半截，检查补完；单品仅 1 款 → 补到 2-3 款 |
+| 待校验 | 泰斯卡 talisker | scotland / islands | 检查酒厂文件+2 款单品是否完整合规即可 |
+| 全缺 | 余市 yoichi | japan | 全新写 |
+| 全缺 | 白州 hakushu | japan | 全新写 |
+| 全缺 | 秩父 chichibu | japan | 全新写 |
+| 全缺 | 尊美醇 jameson | ireland | 全新写 |
+| 全缺 | 帝霖 teeling | ireland | 全新写 |
+| 全缺 | 沃特福德 waterford | ireland | 全新写 |
+| 全缺 | 占边 jim-beam | usa / kentucky | 全新写 |
+| 全缺 | 杰克丹尼 jack-daniels | usa / tennessee | 全新写 |
+| 全缺 | 水牛足迹 buffalo-trace | usa / kentucky | 全新写 |
+| 全缺 | 美格 makers-mark | usa / kentucky | 全新写 |
+| 全缺 | 噶玛兰 kavalan | taiwan | 全新写 |
+| 全缺 | 南投 Omar nantou-omar | taiwan | 全新写 |
+| 全缺 | 雅沐特 amrut | india | 全新写 |
+| 全缺 | 保罗约翰 paul-john | india | 全新写 |
+| 全缺 | 蓝普 rampur | india | 全新写 |
+| 全缺 | 印德里 indri | india | 全新写 |
+
+### A2. 文件格式契约（字段名一字不差；参考已验收样例 `content-staging/distilleries/laphroaig.md` 和 `content-staging/whiskies/laphroaig-10.md`）
+
+**酒厂** `content-staging/distilleries/<id>.md`：
+
+```yaml
+---
+id: laphroaig
+name: 拉弗格
+name_en: Laphroaig
+region: scotland            # scotland|ireland|japan|usa|taiwan|india
+sub_region: islay           # 仅苏格兰(speyside|islay|highlands|lowlands|campbeltown|islands)和美国(kentucky|tennessee)填，其他产区整行省略
+founded: 1815               # 数字
+location: 艾雷岛南岸
+water_source: 基尔布莱德溪   # 不确定则整行省略
+stills: 7                   # 蒸馏器总数，不确定则整行省略
+style_tags: [泥煤, 海盐]     # 2-4 个中文短词
+geo: { lat: 55.63, lon: -6.15 }   # 酒厂真实经纬度，必填（后续换算地图标点用）
+series: [核心系列, 限定与特殊桶]   # 块区名，顺序=网页展示顺序
+---
+正文 = 酒厂故事与趣闻，300-600 字。
+```
+
+**单品** `content-staging/whiskies/<酒厂id>-<slug>.md`，每厂 2-3 款（选最有代表性/最有故事的）：
+
+```yaml
+---
+id: laphroaig-10
+name: 拉弗格 10 年
+name_en: Laphroaig 10
+distillery: laphroaig
+series: 核心系列             # 必须是所属酒厂 series 数组中的一项
+age: 10                     # 无年份款(NAS)写 null
+abv: 43
+cask: 波本桶
+flavor_tags: [泥煤, 海盐, 消毒水]   # 3-5 个
+rarity: 2                   # 1-5，规则见 A3
+rarity_reason: 常规在产，但个性极强爱憎分明
+annotations: ["药水味元凶→酚值40ppm", "查尔斯的最爱"]   # 2-4 条手写标注短句，每条≤15字
+---
+正文 = 这瓶的故事，150-400 字。
+```
+
+### A3. 珍稀度打分规则（流通状态为主 + 价格修正，冲突取更高星）
+
+| 星 | 称号 | 判定 |
+|---|---|---|
+| 1 | 日常口粮 | 常规在产，超市随处可买（~¥100-300） |
+| 2 | 进阶之选 | 常规在产，酒类专门店（¥300-800） |
+| 3 | 稀有 | 高年份/年度限定，需找渠道（¥800-3000） |
+| 4 | 珍藏 | 限量/停产，拍卖常客（¥3000-2万） |
+| 5 | 传说 | 绝版，有价无市（2万+） |
+
+`rarity_reason` 一句话说清为什么（如"酒厂 2011 年关停，存世量只减不增"）。
+
+### A4. 文风
+
+全中文"图鉴解说体"：像《迷宫饭》怪物图鉴条目——第三人称、知识密度高、克制中带一点俏皮，正文末尾可加一句"编纂者按：……"的趣闻。**先联网核实关键事实**（创立年份/现况/代表款/近年大事）；绝不编造具体数字，不确定的可选字段直接省略。
+
+---
+
+## 任务 B：插画出图（可与 A 并行，也可以后分批做）
+
+生成后放入 `~/Desktop/malt-continent/public/assets/`（目录不存在就创建），**命名即生效**，网站自动读取，缺图会自动显示占位框，所以可以慢慢补。
+
+| 类型 | 尺寸 | 路径与命名 | 数量 |
+|---|---|---|---|
+| 世界地图底图 | 2400×1350 | `assets/map/world-map.png` | 1 |
+| 产区横幅 | 1600×500 | `assets/regions/<产区id>-banner.png` | 6 |
+| 酒厂立绘 | 800×1000 | `assets/distilleries/<酒厂id>.png` | 26 |
+| 瓶身图 | 800×1200 | `assets/whiskies/<单品id>.png` | ~55-70 |
+
+- 画风基调：九井谅子《迷宫饭》——手绘线稿+水彩淡彩、羊皮纸底、图鉴排版感；瓶身图突出瓶型与酒标特征（照单品 md 里的名称与桶型画）
+- 地图底图布局必须是**太平洋居中**：苏格兰/爱尔兰在左、日本居中、台湾在日本下方、印度在中左、美国在右（画完地图需和 `src/data/world.json` 的产区热区坐标对齐，这一步建议留给 Claude 校准）
+- 建议顺序：先出苏格兰 8 家试风格 → 定调后批量
+
+---
+
+## 任务 C（可选，默认留给 Claude）：引擎收尾 + 整合 + 验收
+
+以下默认由 Claude 完成（与 schema/world.json 强耦合），Codex 若接手需严格照做：
+
+1. **引擎收尾**：审计 `src/` 半截文件补完；补 `public/assets/map/world-map.svg` 占位手绘地图（与 world.json 热区对齐）+ `public/assets/placeholder.svg`（"？"虚线图鉴框）；补 `.github/workflows/deploy.yml`（withastro/action@v3，site/base 在 CI 从 GITHUB_REPOSITORY 推导，本地 base '/'）；smoke 内容自测 `npm run build` 通过后删除；git 首次提交
+2. **整合**：content-staging 全部移入 `src/content/`；按 world.json 各产区 bbox 把每家酒厂 geo 经纬度线性映射成多边形内百分比坐标写入 `map_pin: {x, y}`（同区标点间距≥4%）；`npm run build` 全绿：6 产区页+26 酒厂页+≥52 单品页；删 content-staging；提交
+3. **验收**：按 PRD 第 6 节逐条检查（星级/称号/rarity_reason 展示、缺图占位、上一瓶下一瓶循环、375px 适配、schema 缺 rarity 构建必须报错等）
+
+---
+
+## 完成判据（任务 A 交付标准）
+
+- [ ] `content-staging/distilleries/` 共 26 个 .md，全部含 geo 与 series
+- [ ] `content-staging/whiskies/` 每厂 2-3 款，series 与所属酒厂对得上，rarity/rarity_reason 齐全
+- [ ] 抽 3 个文件和 laphroaig 样例对照，frontmatter 字段名完全一致
+
+任务 A 完成后告诉 Claude"内容齐了"，由 Claude 跑整合+验收+预览+上线。

@@ -1,0 +1,113 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import Breadcrumb from '../../components/Breadcrumb.astro';
+import { withBase } from '../../utils/withBase';
+import { REGION_FALLBACK_NAMES } from '../../utils/site';
+
+export async function getStaticPaths() {
+  const distilleries = await getCollection('distilleries');
+  return distilleries.map((distillery) => ({
+    params: { id: distillery.data.id },
+    props: { distillery },
+  }));
+}
+
+const { distillery } = Astro.props;
+const d = distillery.data;
+const { Content } = await distillery.render();
+
+const regions = await getCollection('regions');
+const regionEntry = regions.find((r) => r.data.id === d.region);
+const regionName = regionEntry?.data.name ?? REGION_FALLBACK_NAMES[d.region] ?? d.region;
+
+// 单品按 series 数组顺序分块；series 不在酒厂 series 中的归「图鉴」块排最后
+const allWhiskies = await getCollection('whiskies');
+const mine = allWhiskies.filter((w) => w.data.distillery === d.id);
+const groups = d.series
+  .map((s) => ({ title: s, items: mine.filter((w) => w.data.series === s) }))
+  .filter((g) => g.items.length > 0);
+const misc = mine.filter((w) => !d.series.includes(w.data.series));
+if (misc.length > 0) groups.push({ title: '图鉴', items: misc });
+
+const placeholder = withBase('/assets/placeholder.svg');
+const onerr = `this.onerror=null;this.src='${placeholder}';`;
+// frontmatter 指定图片优先，省略时按约定路径猜
+const portraitSrc = withBase(d.portrait_image ?? `/assets/distilleries/${d.id}.png`);
+const bottleSrc = (w: (typeof mine)[number]) =>
+  withBase(w.data.bottle_image ?? `/assets/whiskies/${w.data.id}.png`);
+
+// 档案表：缺省字段该行隐藏
+const dossierRows: [string, string][] = [];
+dossierRows.push(['创立年份', String(d.founded)]);
+dossierRows.push(['地点', d.location]);
+if (d.water_source) dossierRows.push(['水源', d.water_source]);
+if (d.stills !== undefined) dossierRows.push(['蒸馏器', `${d.stills} 座`]);
+---
+
+<Base title={d.name}>
+  <main class="container">
+    <Breadcrumb
+      items={[
+        { label: '地图', href: '/' },
+        { label: regionName, href: `/region/${d.region}` },
+        { label: d.name },
+      ]}
+    />
+
+    <div class="two-col">
+      <figure class="portrait codex-frame" style="margin:0;">
+        <img src={portraitSrc} alt={`${d.name}立绘`} onerror={onerr} />
+      </figure>
+
+      <section class="dossier codex-frame">
+        <h2>图鉴档案 · {d.name} <small style="font-weight:400;color:var(--ink-soft);">{d.name_en}</small></h2>
+        <table>
+          <tbody>
+            {
+              dossierRows.map(([k, v]) => (
+                <tr>
+                  <th>{k}</th>
+                  <td>{v}</td>
+                </tr>
+              ))
+            }
+            <tr>
+              <th>风格标签</th>
+              <td>
+                <div class="chip-row" style="justify-content:flex-start;">
+                  {d.style_tags.map((t) => <span class="chip">{t}</span>)}
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+    </div>
+
+    <section class="story">
+      <h2>故事与趣闻</h2>
+      <article class="prose">
+        <Content />
+      </article>
+    </section>
+
+    {
+      groups.map((g) => (
+        <section class="series-block">
+          <h2>{g.title}</h2>
+          <div class="w-strip">
+            {g.items.map((w) => (
+              <a class="w-card codex-frame" href={withBase(`/whisky/${w.data.id}`)}>
+                <span class="star-badge">{'★'.repeat(w.data.rarity)}</span>
+                <img src={bottleSrc(w)} alt={w.data.name} loading="lazy" onerror={onerr} />
+                <div class="w-name">{w.data.name}</div>
+              </a>
+            ))}
+          </div>
+        </section>
+      ))
+    }
+    {mine.length === 0 && <div class="empty-note codex-frame">此厂单品图鉴编纂中……</div>}
+  </main>
+</Base>

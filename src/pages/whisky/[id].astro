@@ -1,0 +1,131 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import Breadcrumb from '../../components/Breadcrumb.astro';
+import { withBase } from '../../utils/withBase';
+import { REGION_FALLBACK_NAMES, rarityStars, rarityTitle } from '../../utils/site';
+
+export async function getStaticPaths() {
+  const whiskies = await getCollection('whiskies');
+  return whiskies.map((whisky) => ({
+    params: { id: whisky.data.id },
+    props: { whisky },
+  }));
+}
+
+const { whisky } = Astro.props;
+const w = whisky.data;
+const { Content } = await whisky.render();
+
+const distilleries = await getCollection('distilleries');
+const dist = distilleries.find((d) => d.data.id === w.distillery);
+const regions = await getCollection('regions');
+const regionEntry = dist ? regions.find((r) => r.data.id === dist.data.region) : undefined;
+const regionName = dist
+  ? (regionEntry?.data.name ?? REGION_FALLBACK_NAMES[dist.data.region] ?? dist.data.region)
+  : '';
+
+// 上一瓶/下一瓶：同厂内按 series 顺序（不在酒厂 series 的归最后），同系列按文件序，首尾循环
+const seriesOrder = dist?.data.series ?? [];
+const seriesIdx = (s: string) => {
+  const i = seriesOrder.indexOf(s);
+  return i === -1 ? seriesOrder.length : i;
+};
+const allWhiskies = await getCollection('whiskies');
+const siblings = allWhiskies
+  .filter((x) => x.data.distillery === w.distillery)
+  .sort((a, b) => seriesIdx(a.data.series) - seriesIdx(b.data.series) || a.id.localeCompare(b.id));
+const pos = siblings.findIndex((x) => x.data.id === w.id);
+const prev = siblings[(pos - 1 + siblings.length) % siblings.length];
+const next = siblings[(pos + 1) % siblings.length];
+
+const placeholder = withBase('/assets/placeholder.svg');
+const onerr = `this.onerror=null;this.src='${placeholder}';`;
+// frontmatter 指定图片优先，省略时按约定路径猜
+const bottleSrc = withBase(w.bottle_image ?? `/assets/whiskies/${w.id}.png`);
+const annotations = w.annotations ?? [];
+
+// 手写标注小签：绝对定位在瓶身图两侧，交替排布
+const notePos = (i: number) => {
+  const side = i % 2 === 0 ? 'left' : 'right';
+  const top = 10 + Math.floor(i / 2) * 34 + (i % 2) * 16;
+  return { side, top };
+};
+
+const crumbs = [{ label: '地图', href: '/' }] as { label: string; href?: string }[];
+if (dist) {
+  crumbs.push({ label: regionName, href: `/region/${dist.data.region}` });
+  crumbs.push({ label: dist.data.name, href: `/distillery/${dist.data.id}` });
+}
+crumbs.push({ label: w.name });
+---
+
+<Base title={w.name}>
+  <main class="container">
+    <Breadcrumb items={crumbs} />
+
+    <div class="two-col">
+      <figure class="bottle-fig" style="margin:0;">
+        <img src={bottleSrc} alt={w.name} onerror={onerr} />
+        {
+          annotations.map((text, i) => {
+            const p = notePos(i);
+            return (
+              <span class={`note ${p.side}`} style={`top:${p.top}%;`}>{text}</span>
+            );
+          })
+        }
+      </figure>
+
+      <div>
+        <section class="codex-frame">
+          <table class="spec-table">
+            <tbody>
+              <tr><th>名称</th><td>{w.name}</td></tr>
+              {w.name_en && <tr><th>英文名</th><td>{w.name_en}</td></tr>}
+              <tr><th>年份</th><td>{w.age === null ? 'NAS（无年份标注）' : `${w.age} 年`}</td></tr>
+              <tr><th>度数</th><td>{w.abv}% vol</td></tr>
+              <tr><th>桶型</th><td>{w.cask}</td></tr>
+              <tr>
+                <th>风味标签</th>
+                <td>
+                  <div class="chip-row" style="justify-content:flex-start;">
+                    {w.flavor_tags.map((t) => <span class="chip">{t}</span>)}
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section class="rarity-box codex-frame">
+          <div>
+            <span class="stars">{rarityStars(w.rarity)}</span>
+            <span class="rank-title">{rarityTitle(w.rarity)}</span>
+          </div>
+          <div class="reason">{w.rarity_reason}</div>
+        </section>
+      </div>
+    </div>
+
+    <section class="whisky-story">
+      <h2>这瓶的故事</h2>
+      <article class="prose">
+        <Content />
+      </article>
+    </section>
+
+    {
+      siblings.length > 1 && prev && next && (
+        <nav class="pager">
+          <a class="codex-frame" href={withBase(`/whisky/${prev.data.id}`)}>
+            <span class="dir">‹ 上一瓶</span> {prev.data.name}
+          </a>
+          <a class="codex-frame" href={withBase(`/whisky/${next.data.id}`)}>
+            {next.data.name} <span class="dir">下一瓶 ›</span>
+          </a>
+        </nav>
+      )
+    }
+  </main>
+</Base>

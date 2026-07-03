@@ -1,0 +1,66 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import { withBase } from '../utils/withBase';
+import world from '../data/world.json';
+
+const distilleries = await getCollection('distilleries');
+// 只渲染有 map_pin 的酒厂（空集合 / 0 标点也允许）
+const pinned = distilleries.filter((d) => d.data.map_pin);
+---
+
+<Base showLegend={true}>
+  <main>
+    <div class="map-scroll">
+      <div class="map-inner">
+        <img
+          class="map-base"
+          src={withBase('/assets/map/world-map.svg')}
+          alt="麦芽大陆手绘世界地图"
+        />
+        <!-- 产区多边形热区（百分比坐标，preserveAspectRatio=none 与底图对齐） -->
+        <svg
+          class="map-overlay"
+          viewBox="0 0 100 100"
+          preserveAspectRatio="none"
+          aria-label="产区热区"
+        >
+          {
+            world.regions.map((r) => (
+              <a href={withBase(`/region/${r.id}`)} aria-label={`前往产区：${r.name}`}>
+                <polygon points={r.polygon.map((p) => p.join(',')).join(' ')}>
+                  <title>{r.name}</title>
+                </polygon>
+              </a>
+            ))
+          }
+        </svg>
+        <!-- 产区名点击热区（盖在底图大字标签上） -->
+        {
+          world.regions.map((r) => (
+            <a
+              class="region-label-hit"
+              style={`left:${r.label_pos.x}%;top:${r.label_pos.y}%;`}
+              href={withBase(`/region/${r.id}`)}
+              aria-label={`产区：${r.name}`}
+            />
+          ))
+        }
+        <!-- 酒厂标点（map_pin 百分比坐标） -->
+        {
+          pinned.map((d) => (
+            <a
+              class="pin"
+              style={`left:${d.data.map_pin!.x}%;top:${d.data.map_pin!.y}%;`}
+              href={withBase(`/distillery/${d.data.id}`)}
+            >
+              <span class="pin-dot" />
+              <span class="pin-name">{d.data.name}</span>
+            </a>
+          ))
+        }
+      </div>
+    </div>
+    <p class="map-hint">—— 点产区名进图鉴 · 点图钉直达酒厂 · 手机可左右拖动地图 ——</p>
+  </main>
+</Base>
