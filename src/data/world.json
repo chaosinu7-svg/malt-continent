@@ -1,5 +1,5 @@
 {
-  "comment": "产区地图配置。projection：经纬度→图面百分比投影（对应 public/assets/map/world-map.png，太平洋居中）；loupe：产区放大镜圆窗（x/y 为占底图宽/高的百分比，r 为占底图宽的百分比）；label_pos：产区名标签（贴在该产区陆块旁）；bbox：产区真实地理范围（把酒厂经纬度线性映射进圆窗内切区域）；polygon 为旧 SVG 底图热区，已不再使用，保留仅为向后兼容。",
+  "comment": "产区地图配置。projection：经纬度→图面百分比投影（对应 public/assets/map/world-map.png，太平洋居中）；regions：产区名标签 label_pos + 真实位置小点校准 dot_offset（polygon 为旧 SVG 底图热区，已不再使用，保留仅为向后兼容）；insets：放大镜圆窗，一个产区可拆多窗（苏格兰两窗）。inset 字段：region=所属产区（标题点击落地页）、cx/cy 圆心（cx 占底图宽 %，cy 占底图高 %）、r 半径（占底图宽 %）、bbox=该圆窗覆盖的真实地理切片（酒厂经纬度线性映射进圆内切正方形）、members=圆窗内酒厂 id。圆窗地区图路径约定 /assets/map/inset-<id>.png（方图，必须严格按 bbox 范围作画，否则图钉会漂）；图未画好时构建自动回退羊皮纸底。",
   "projection": {
     "comment": "lon' = lon < wrapBelowLon ? lon + 360 : lon；x% = x0 + (lon' - lonAnchor) * kx；y% = y0 - ky * lat。常数按 world-map.png 目检校准。",
     "wrapBelowLon": -30,
@@ -13,356 +13,116 @@
     {
       "id": "scotland",
       "name": "苏格兰",
-      "label_pos": {
-        "x": 4.5,
-        "y": 23
-      },
-      "loupe": {
-        "x": 16.5,
-        "y": 18,
-        "r": 9
-      },
-      "polygon": [
-        [
-          7,
-          14
-        ],
-        [
-          13,
-          12
-        ],
-        [
-          18,
-          14
-        ],
-        [
-          20,
-          19
-        ],
-        [
-          19.5,
-          26
-        ],
-        [
-          15,
-          31
-        ],
-        [
-          10,
-          32
-        ],
-        [
-          6,
-          28
-        ],
-        [
-          5,
-          20
-        ]
-      ],
-      "bbox": {
-        "minLat": 55.0,
-        "maxLat": 59.5,
-        "minLon": -7.6,
-        "maxLon": -1.5
-      },
-      "dot_offset": {
-        "dx": 0,
-        "dy": 1.7
-      }
+      "label_pos": { "x": 4.5, "y": 23 },
+      "polygon": [[7,14],[13,12],[18,14],[20,19],[19.5,26],[15,31],[10,32],[6,28],[5,20]],
+      "dot_offset": { "dx": 0, "dy": 1.7 }
     },
     {
       "id": "ireland",
       "name": "爱尔兰",
-      "label_pos": {
-        "x": 4.2,
-        "y": 38.5
-      },
-      "loupe": {
-        "x": 10,
-        "y": 48,
-        "r": 7.5
-      },
-      "polygon": [
-        [
-          4,
-          38
-        ],
-        [
-          10,
-          36
-        ],
-        [
-          14,
-          39
-        ],
-        [
-          14,
-          45
-        ],
-        [
-          10,
-          49
-        ],
-        [
-          5,
-          48
-        ],
-        [
-          2,
-          43
-        ]
-      ],
-      "bbox": {
-        "minLat": 51.4,
-        "maxLat": 55.4,
-        "minLon": -10.5,
-        "maxLon": -5.9
-      },
-      "dot_offset": {
-        "dx": -0.9,
-        "dy": 3.6
-      }
+      "label_pos": { "x": 4.2, "y": 38.5 },
+      "polygon": [[4,38],[10,36],[14,39],[14,45],[10,49],[5,48],[2,43]],
+      "dot_offset": { "dx": -0.9, "dy": 3.6 }
     },
     {
       "id": "india",
       "name": "印度",
-      "label_pos": {
-        "x": 21.5,
-        "y": 51
-      },
-      "loupe": {
-        "x": 32.5,
-        "y": 87,
-        "r": 6.5
-      },
-      "polygon": [
-        [
-          26,
-          45
-        ],
-        [
-          33,
-          43
-        ],
-        [
-          38,
-          47
-        ],
-        [
-          38,
-          54
-        ],
-        [
-          34,
-          62
-        ],
-        [
-          29,
-          64
-        ],
-        [
-          25,
-          57
-        ],
-        [
-          24,
-          49
-        ]
-      ],
-      "bbox": {
-        "minLat": 8.0,
-        "maxLat": 34.5,
-        "minLon": 68.0,
-        "maxLon": 92.0
-      },
-      "dot_offset": {
-        "dx": -0.3,
-        "dy": -0.8
-      }
+      "label_pos": { "x": 21.5, "y": 51 },
+      "polygon": [[26,45],[33,43],[38,47],[38,54],[34,62],[29,64],[25,57],[24,49]],
+      "dot_offset": { "dx": -0.3, "dy": -0.8 }
     },
     {
       "id": "japan",
       "name": "日本",
-      "label_pos": {
-        "x": 47.5,
-        "y": 42
-      },
-      "loupe": {
-        "x": 56,
-        "y": 28,
-        "r": 8.5
-      },
-      "polygon": [
-        [
-          46,
-          24
-        ],
-        [
-          50,
-          21
-        ],
-        [
-          54,
-          24
-        ],
-        [
-          57,
-          29
-        ],
-        [
-          58,
-          37
-        ],
-        [
-          55,
-          43
-        ],
-        [
-          51,
-          45
-        ],
-        [
-          48,
-          41
-        ],
-        [
-          47,
-          33
-        ],
-        [
-          45,
-          28
-        ]
-      ],
-      "bbox": {
-        "minLat": 31.0,
-        "maxLat": 45.5,
-        "minLon": 129.5,
-        "maxLon": 145.5
-      },
-      "dot_offset": {
-        "dx": -0.6,
-        "dy": 1.6
-      }
+      "label_pos": { "x": 47.5, "y": 42 },
+      "polygon": [[46,24],[50,21],[54,24],[57,29],[58,37],[55,43],[51,45],[48,41],[47,33],[45,28]],
+      "dot_offset": { "dx": -0.6, "dy": 1.6 }
     },
     {
       "id": "taiwan",
       "name": "台湾",
-      "label_pos": {
-        "x": 34.8,
-        "y": 53
-      },
-      "loupe": {
-        "x": 55,
-        "y": 60,
-        "r": 7
-      },
-      "polygon": [
-        [
-          49.5,
-          54.5
-        ],
-        [
-          53,
-          53.5
-        ],
-        [
-          54,
-          57.5
-        ],
-        [
-          52.5,
-          61.5
-        ],
-        [
-          49.5,
-          61
-        ],
-        [
-          48.5,
-          57
-        ]
-      ],
-      "bbox": {
-        "minLat": 21.9,
-        "maxLat": 25.3,
-        "minLon": 120.0,
-        "maxLon": 122.1
-      },
-      "dot_offset": {
-        "dx": -0.2,
-        "dy": 0.4
-      }
+      "label_pos": { "x": 34.8, "y": 53 },
+      "polygon": [[49.5,54.5],[53,53.5],[54,57.5],[52.5,61.5],[49.5,61],[48.5,57]],
+      "dot_offset": { "dx": -0.2, "dy": 0.4 }
     },
     {
       "id": "usa",
       "name": "美国",
-      "label_pos": {
-        "x": 69.5,
-        "y": 45
-      },
-      "loupe": {
-        "x": 89.5,
-        "y": 58.5,
-        "r": 8
-      },
-      "polygon": [
-        [
-          72,
-          21
-        ],
-        [
-          80,
-          19
-        ],
-        [
-          88,
-          21
-        ],
-        [
-          92,
-          26
-        ],
-        [
-          93,
-          35
-        ],
-        [
-          90,
-          44
-        ],
-        [
-          84,
-          50
-        ],
-        [
-          77,
-          50
-        ],
-        [
-          72,
-          45
-        ],
-        [
-          70,
-          36
-        ],
-        [
-          69,
-          27
-        ]
-      ],
-      "bbox": {
-        "minLat": 25.0,
-        "maxLat": 49.0,
-        "minLon": -125.0,
-        "maxLon": -67.0
-      },
-      "dot_offset": {
-        "dx": 0,
-        "dy": 0
-      }
+      "label_pos": { "x": 69.5, "y": 45 },
+      "polygon": [[72,21],[80,19],[88,21],[92,26],[93,35],[90,44],[84,50],[77,50],[72,45],[70,36],[69,27]],
+      "dot_offset": { "dx": 0, "dy": 0 }
+    }
+  ],
+  "insets": [
+    {
+      "id": "scotland-north",
+      "region": "scotland",
+      "title": "苏格兰·斯佩塞与高地",
+      "cx": 14,
+      "cy": 12,
+      "r": 6.5,
+      "bbox": { "minLat": 56.2, "maxLat": 58.7, "minLon": -7.5, "maxLon": -2.0 },
+      "members": ["macallan", "glenfiddich", "glenmorangie", "talisker"]
+    },
+    {
+      "id": "scotland-south",
+      "region": "scotland",
+      "title": "苏格兰·艾雷与南境",
+      "cx": 25.5,
+      "cy": 25,
+      "r": 6.5,
+      "bbox": { "minLat": 54.9, "maxLat": 56.2, "minLon": -7.0, "maxLon": -3.0 },
+      "members": ["laphroaig", "ardbeg", "springbank", "auchentoshan", "johnnie-walker"]
+    },
+    {
+      "id": "ireland",
+      "region": "ireland",
+      "title": "爱尔兰",
+      "cx": 11,
+      "cy": 47,
+      "r": 7.5,
+      "bbox": { "minLat": 51.4, "maxLat": 55.5, "minLon": -10.0, "maxLon": -5.4 },
+      "members": ["jameson", "bushmills", "teeling", "waterford"]
+    },
+    {
+      "id": "japan",
+      "region": "japan",
+      "title": "日本",
+      "cx": 56,
+      "cy": 28,
+      "r": 8.5,
+      "bbox": { "minLat": 34.0, "maxLat": 44.0, "minLon": 134.5, "maxLon": 142.0 },
+      "members": ["yamazaki", "yoichi", "hakushu", "chichibu"]
+    },
+    {
+      "id": "taiwan",
+      "region": "taiwan",
+      "title": "台湾",
+      "cx": 55,
+      "cy": 60,
+      "r": 7,
+      "bbox": { "minLat": 21.8, "maxLat": 25.5, "minLon": 119.8, "maxLon": 122.3 },
+      "members": ["kavalan", "nantou-omar"]
+    },
+    {
+      "id": "india",
+      "region": "india",
+      "title": "印度",
+      "cx": 32.5,
+      "cy": 87,
+      "r": 6.5,
+      "bbox": { "minLat": 11.5, "maxLat": 31.0, "minLon": 72.5, "maxLon": 80.5 },
+      "members": ["amrut", "paul-john", "rampur", "indri"]
+    },
+    {
+      "id": "usa",
+      "region": "usa",
+      "title": "美国·肯塔基与田纳西",
+      "cx": 89.5,
+      "cy": 58.5,
+      "r": 8,
+      "bbox": { "minLat": 34.4, "maxLat": 39.2, "minLon": -88.5, "maxLon": -83.0 },
+      "members": ["jim-beam", "jack-daniels", "buffalo-trace", "makers-mark"]
     }
   ]
 }

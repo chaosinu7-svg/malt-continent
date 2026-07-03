@@ -1,4 +1,6 @@
 ---
+import fs from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { getCollection } from 'astro:content';
 import Base from '../layouts/Base.astro';
 import { withBase } from '../utils/withBase';
@@ -17,30 +19,64 @@ const lonX = (lon: number) => {
 const latY = (lat: number) => P.y0 - P.ky * lat; // 高度百分比
 
 const distilleries = await getCollection('distilleries');
+const byId = new Map(distilleries.map((d) => [d.data.id, d]));
 
-// 每产区：真实位置小圆点 + 放大镜圆窗（bbox 线性映射钉位 + 防重叠微调 + 虚线引线）
-const regions = world.regions.map((r) => {
-  const ds = distilleries.filter((d) => d.data.region === r.id);
-  // 真实位置圆点（SVG 单位）；dot_offset 为该产区手绘陆块相对全局投影的目检校准偏移
-  const off = r.dot_offset ?? { dx: 0, dy: 0 };
-  const dots = ds.map((d) => ({
+// 酒厂真实位置（SVG 单位）；dot_offset 为该产区手绘陆块相对全局投影的目检校准偏移
+const dotOf = (d: (typeof distilleries)[number]) => {
+  const region = world.regions.find((r) => r.id === d.data.region);
+  const off = region?.dot_offset ?? { dx: 0, dy: 0 };
+  return {
     x: lonX(d.data.geo.lon) + off.dx,
     y: Y(latY(d.data.geo.lat) + off.dy),
-  }));
-  const cx = r.loupe.x;
-  const cy = Y(r.loupe.y);
-  const rad = r.loupe.r;
-  // bbox → 圆窗内切正方形（留 15% 内边距），纬度向北为上需翻转
-  const half = rad * Math.SQRT1_2 * 0.85;
-  const { minLat, maxLat, minLon, maxLon } = r.bbox;
+  };
+};
+
+// 产区：名标签（label_pos）+ 每家酒厂真实位置琥珀小点
+const regions = world.regions.map((r) => ({
+  ...r,
+  dots: distilleries.filter((d) => d.data.region === r.id).map(dotOf),
+}));
+
+// 构建期守卫：每家酒厂必须且只能出现在一个圆窗里
+{
+  const seen = new Map<string, string>();
+  for (const ins of world.insets)
+    for (const m of ins.members) {
+      if (!byId.has(m)) throw new Error(`inset ${ins.id} 引用了不存在的酒厂 ${m}`);
+      if (seen.has(m)) throw new Error(`酒厂 ${m} 同时出现在 ${seen.get(m)} 与 ${ins.id}`);
+      seen.set(m, ins.id);
+    }
+  const missing = distilleries.filter((d) => !seen.has(d.data.id));
+  if (missing.length)
+    throw new Error(`酒厂未分配圆窗：${missing.map((d) => d.data.id).join(', ')}`);
+}
+
+// 圆窗地区图：约定 /assets/map/inset-<id>.png（方图，画 bbox 范围）；没画好回退羊皮纸底
+const mapAssetDir = fileURLToPath(new URL('../../public/assets/map/', import.meta.url));
+
+// 每个圆窗：bbox 线性映射钉位 + 防重叠松弛 + 虚线引线指向真实地理位置
+const insets = world.insets.map((ins) => {
+  const ds = ins.members.map((id) => byId.get(id)!);
+  const cx = ins.cx;
+  const cy = Y(ins.cy);
+  const rad = ins.r;
+  // bbox → 圆窗内切正方形（留 12% 内边距），纬度向北为上需翻转
+  const half = rad * Math.SQRT1_2 * 0.88;
+  // 长标题（含「·」）拆两行，短标题单行
+  const titleLines = ins.title.includes('·') ? ins.title.split('·') : [ins.title];
+  // 圆顶标题净空：钉身画在锚点上方，最北的钉也不许顶进标题区（两行标题留更多；
+  // 按 760px 小屏钉身相对尺寸校准，小屏钉更"大"）
+  const dyMin = Math.max(-half, -(rad - (titleLines.length > 1 ? 6.0 : 4.6)));
+  const { minLat, maxLat, minLon, maxLon } = ins.bbox;
   const pins = ds.map((d) => ({
     id: d.data.id,
     name: d.data.name,
     dx: (((d.data.geo.lon - minLon) / (maxLon - minLon)) * 2 - 1) * half,
     dy: -((((d.data.geo.lat - minLat) / (maxLat - minLat)) * 2 - 1) * half),
   }));
-  // 任意两钉间距 < 圆窗直径 12% 时沿连线推开（迭代松弛），并夹回内切区域
-  const minGap = 2 * rad * 0.12;
+  // 任意两钉间距 < 圆窗直径 10% 时沿连线推开（迭代松弛），并夹回内切区域
+  // （艾雷岛拉弗格/阿贝真实相距仅 0.04°，靠这里错开保证都可点击）
+  const minGap = 2 * rad * 0.1;
   for (let iter = 0; iter < 80; iter++) {
     let moved = false;
     for (let i = 0; i < pins.length; i++) {
@@ -66,13 +102,14 @@ const regions = world.regions.map((r) => {
     }
     for (const p of pins) {
       p.dx = Math.max(-half, Math.min(half, p.dx));
-      p.dy = Math.max(-half, Math.min(half, p.dy));
+      p.dy = Math.max(dyMin, Math.min(half, p.dy));
     }
     if (!moved) break;
   }
-  // 虚线引线：圆窗边缘 → 产区真实位置（在圆点群质心前收笔，不压圆点）
-  const gx = dots.reduce((s, p) => s + p.x, 0) / (dots.length || 1);
-  const gy = dots.reduce((s, p) => s + p.y, 0) / (dots.length || 1);
+  // 虚线引线：圆窗边缘 → 该窗成员真实位置质心（在圆点群前收笔，不压圆点）
+  const memberDots = ds.map(dotOf);
+  const gx = memberDots.reduce((s, p) => s + p.x, 0) / (memberDots.length || 1);
+  const gy = memberDots.reduce((s, p) => s + p.y, 0) / (memberDots.length || 1);
   const ux = gx - cx;
   const uy = gy - cy;
   const len = Math.hypot(ux, uy) || 1;
@@ -82,7 +119,9 @@ const regions = world.regions.map((r) => {
     x2: gx - (ux / len) * 1.5,
     y2: gy - (uy / len) * 1.5,
   };
-  return { ...r, dots, cx, cy, rad, pins, leader };
+  // 地区图已画好才嵌入，否则保持羊皮纸回退态
+  const hasImg = fs.existsSync(`${mapAssetDir}inset-${ins.id}.png`);
+  return { ...ins, cx, cy, rad, pins, leader, hasImg, titleLines };
 });
 ---
 
@@ -101,18 +140,41 @@ const regions = world.regions.map((r) => {
           viewBox={`0 0 100 ${VB_H}`}
           aria-label="产区放大镜圆窗"
         >
+          <defs>
+            {
+              insets
+                .filter((i) => i.hasImg)
+                .map((i) => (
+                  <clipPath id={`loupe-clip-${i.id}`}>
+                    <circle cx={i.cx} cy={i.cy} r={i.rad - 0.15} />
+                  </clipPath>
+                ))
+            }
+          </defs>
           {
-            regions.map((r) => (
+            insets.map((i) => (
               <g>
                 <line
                   class="leader"
-                  x1={r.leader.x1}
-                  y1={r.leader.y1}
-                  x2={r.leader.x2}
-                  y2={r.leader.y2}
+                  x1={i.leader.x1}
+                  y1={i.leader.y1}
+                  x2={i.leader.x2}
+                  y2={i.leader.y2}
                 />
-                <circle class="loupe-glass" cx={r.cx} cy={r.cy} r={r.rad} />
-                <circle class="loupe-inner" cx={r.cx} cy={r.cy} r={r.rad - 0.55} />
+                <circle class="loupe-glass" cx={i.cx} cy={i.cy} r={i.rad} />
+                {i.hasImg && (
+                  <image
+                    class="loupe-img"
+                    href={withBase(`/assets/map/inset-${i.id}.png`)}
+                    x={i.cx - i.rad}
+                    y={i.cy - i.rad}
+                    width={i.rad * 2}
+                    height={i.rad * 2}
+                    preserveAspectRatio="xMidYMid slice"
+                    clip-path={`url(#loupe-clip-${i.id})`}
+                  />
+                )}
+                <circle class="loupe-inner" cx={i.cx} cy={i.cy} r={i.rad - 0.55} />
               </g>
             ))
           }
@@ -123,16 +185,30 @@ const regions = world.regions.map((r) => {
             )
           }
           {
-            regions.map((r) => (
-              <a href={withBase(`/region/${r.id}`)} aria-label={`前往产区：${r.name}`}>
-                <text
-                  class="loupe-title"
-                  x={r.cx}
-                  y={r.cy - r.rad + 2.2}
-                  text-anchor="middle"
-                >
-                  {r.name}
-                </text>
+            insets.map((i) => (
+              <a href={withBase(`/region/${i.region}`)} aria-label={`前往产区：${i.title}`}>
+                {i.titleLines.length > 1 ? (
+                  <text
+                    class="loupe-title two-line"
+                    x={i.cx}
+                    y={i.cy - i.rad + 2.0}
+                    text-anchor="middle"
+                  >
+                    <tspan x={i.cx}>{i.titleLines[0]}</tspan>
+                    <tspan x={i.cx} dy="1.6">
+                      {i.titleLines[1]}
+                    </tspan>
+                  </text>
+                ) : (
+                  <text
+                    class="loupe-title"
+                    x={i.cx}
+                    y={i.cy - i.rad + 2.2}
+                    text-anchor="middle"
+                  >
+                    {i.title}
+                  </text>
+                )}
               </a>
             ))
           }
@@ -152,11 +228,11 @@ const regions = world.regions.map((r) => {
         }
         <!-- 圆窗内酒厂图钉（geo 实时计算，悬停显名，点击直达酒厂） -->
         {
-          regions.map((r) =>
-            r.pins.map((p) => (
+          insets.map((i) =>
+            i.pins.map((p) => (
               <a
                 class="pin"
-                style={`left:${r.cx + p.dx}%;top:${((r.cy + p.dy) / VB_H) * 100}%;`}
+                style={`left:${i.cx + p.dx}%;top:${((i.cy + p.dy) / VB_H) * 100}%;`}
                 href={withBase(`/distillery/${p.id}`)}
                 aria-label={`酒厂：${p.name}`}
               >

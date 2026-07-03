@@ -163,13 +163,24 @@ h1, h2, h3, .hand { font-family: var(--font-hand); }
   stroke: var(--ink);
   stroke-width: 0.1;
 }
-/* 圆窗顶部产区名小字（可点击进图鉴） */
+/* 圆窗内嵌地区图（clipPath 圆裁，图未画好时构建自动回退羊皮纸底） */
+.map-overlay .loupe-img { pointer-events: none; }
+/* 圆窗顶部产区名小字（可点击进图鉴）；羊皮纸描边晕圈，叠在地区图上也可读 */
 .map-overlay .loupe-title {
   font-family: var(--font-hand);
   font-size: 1.7px;
   font-weight: 700;
   letter-spacing: 0.12px;
   fill: var(--ink);
+  paint-order: stroke;
+  stroke: rgba(243, 233, 210, 0.88);
+  stroke-width: 0.5px;
+  stroke-linejoin: round;
+}
+/* 长标题（苏格兰双窗、美国）拆两行后缩小字号，保证圆内放得下 */
+.map-overlay .loupe-title.two-line {
+  font-size: 1.35px;
+  letter-spacing: 0.08px;
 }
 .map-overlay a:hover .loupe-title,
 .map-overlay a:focus .loupe-title { fill: var(--amber-deep); }
@@ -442,6 +453,8 @@ h1, h2, h3, .hand { font-family: var(--font-hand); }
   .card-grid { grid-template-columns: repeat(2, 1fr); }
   /* 小屏地图 760px：产区名标签缩小，避免贴边被裁 */
   .region-label { font-size: 0.92rem; letter-spacing: 0.05em; padding: 0 7px; }
+  /* 小屏钉身缩小，不顶进圆窗标题区（32px 点击区由 .pin 盒子保证，不受影响） */
+  .pin .pin-dot { width: 12px; height: 12px; border-width: 1.5px; }
 }
 @media (max-width: 640px) {
   .two-col { grid-template-columns: 1fr; }
