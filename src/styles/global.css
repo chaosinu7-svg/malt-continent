@@ -265,8 +265,10 @@ h1, h2, h3, .hand { font-family: var(--font-hand); }
 /* ---------- 产区页 ---------- */
 .region-banner { position: relative; margin: 8px 0 14px; }
 .region-banner img {
+  display: block;
   width: 100%;
-  height: 220px;
+  height: auto;
+  aspect-ratio: 16 / 5;
   object-fit: cover;
   border: 2px solid var(--ink);
   border-radius: 10px;
@@ -459,7 +461,6 @@ h1, h2, h3, .hand { font-family: var(--font-hand); }
 @media (max-width: 640px) {
   .two-col { grid-template-columns: 1fr; }
   .card-grid { grid-template-columns: 1fr; }
-  .region-banner img { height: 150px; }
   .bottle-fig { padding: 12px 0; display: flex; flex-direction: column; gap: 8px; }
   .note, .note.left, .note.right { position: static; transform: none; max-width: none; text-align: left; }
   .note::after { display: none; }
