@@ -387,6 +387,44 @@ h1, h2, h3, .hand { font-family: var(--font-hand); }
   letter-spacing: 1px;
 }
 
+/* ---------- 珍稀度光效（按 rarity 分级，网页动效表达珍稀度）---------- */
+/* ★1 日常 / ★2 进阶：无光，朴素。★3 稀有：静态微光。★4 珍藏：金光+缓慢脉动。★5 传说：圣光+呼吸。 */
+.w-card[data-rarity="3"] { box-shadow: 0 0 10px -2px rgba(200, 134, 27, 0.55); }
+.w-card[data-rarity="4"] {
+  box-shadow: 0 0 14px 0 rgba(200, 134, 27, 0.75);
+  animation: rarity-pulse 3.2s ease-in-out infinite;
+}
+.w-card[data-rarity="5"] {
+  box-shadow: 0 0 20px 2px rgba(230, 170, 40, 0.9), 0 0 6px 0 rgba(255, 220, 120, 0.6);
+  animation: rarity-halo 2.6s ease-in-out infinite;
+}
+.bottle-fig[data-rarity="3"] img { filter: drop-shadow(0 0 10px rgba(200, 134, 27, 0.55)); }
+.bottle-fig[data-rarity="4"] img {
+  animation: bottle-pulse 3.2s ease-in-out infinite;
+}
+.bottle-fig[data-rarity="5"] img {
+  animation: bottle-halo 2.6s ease-in-out infinite;
+}
+@keyframes rarity-pulse {
+  0%, 100% { box-shadow: 0 0 12px -1px rgba(200, 134, 27, 0.55); }
+  50% { box-shadow: 0 0 18px 1px rgba(200, 134, 27, 0.9); }
+}
+@keyframes rarity-halo {
+  0%, 100% { box-shadow: 0 0 16px 0 rgba(230, 170, 40, 0.7), 0 0 5px 0 rgba(255, 220, 120, 0.5); }
+  50% { box-shadow: 0 0 26px 4px rgba(230, 170, 40, 1), 0 0 10px 2px rgba(255, 225, 140, 0.75); }
+}
+@keyframes bottle-pulse {
+  0%, 100% { filter: drop-shadow(0 0 12px rgba(200, 134, 27, 0.55)); }
+  50% { filter: drop-shadow(0 0 20px rgba(200, 134, 27, 0.95)); }
+}
+@keyframes bottle-halo {
+  0%, 100% { filter: drop-shadow(0 0 16px rgba(230, 170, 40, 0.7)); }
+  50% { filter: drop-shadow(0 0 28px rgba(255, 210, 110, 1)); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .w-card[data-rarity], .bottle-fig[data-rarity] img { animation: none !important; }
+}
+
 /* ---------- 单品页 ---------- */
 .bottle-fig { position: relative; padding: 34px 12px; }
 .bottle-fig > img { aspect-ratio: 2 / 3; max-height: 520px; margin: 0 auto; }

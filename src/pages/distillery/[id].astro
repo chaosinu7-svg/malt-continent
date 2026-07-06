@@ -98,7 +98,7 @@ if (d.stills !== undefined) dossierRows.push(['蒸馏器', `${d.stills} 座`]);
           <h2>{g.title}</h2>
           <div class="w-strip">
             {g.items.map((w) => (
-              <a class="w-card codex-frame" href={withBase(`/whisky/${w.data.id}`)}>
+              <a class="w-card codex-frame" data-rarity={w.data.rarity} href={withBase(`/whisky/${w.data.id}`)}>
                 <span class="star-badge">{'★'.repeat(w.data.rarity)}</span>
                 <img src={bottleSrc(w)} alt={w.data.name} loading="lazy" onerror={onerr} />
                 <div class="w-name">{w.data.name}</div>
