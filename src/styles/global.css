@@ -426,32 +426,22 @@ h1, h2, h3, .hand { font-family: var(--font-hand); }
 }
 
 /* ---------- 单品页 ---------- */
-.bottle-fig { position: relative; padding: 34px 12px; }
-.bottle-fig > img { aspect-ratio: 2 / 3; max-height: 520px; margin: 0 auto; }
+.bottle-fig { padding: 12px 12px 6px; display: flex; flex-direction: column; align-items: center; gap: 14px; }
+.bottle-fig > img { aspect-ratio: 2 / 3; max-height: 560px; margin: 0; }
+/* 手写标注小签：排在瓶身图下方，居中换行，不遮挡画面 */
+.note-row { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
 .note {
-  position: absolute;
-  max-width: 9.5em;
   font-family: var(--font-hand);
-  font-size: 0.88rem;
-  line-height: 1.45;
+  font-size: 0.9rem;
+  line-height: 1.35;
   background: #fff7dd;
   border: 1.5px dashed var(--amber-deep);
   border-radius: 6px;
-  padding: 4px 9px;
+  padding: 3px 10px;
   box-shadow: 2px 3px 0 rgba(74, 53, 36, 0.15);
-  z-index: 5;
 }
-.note::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  width: 34px;
-  border-top: 2px dashed var(--amber-deep);
-}
-.note.left { left: 0; transform: rotate(-2.5deg); }
-.note.left::after { left: 100%; }
-.note.right { right: 0; transform: rotate(2deg); text-align: right; }
-.note.right::after { right: 100%; }
+.note:nth-child(odd) { transform: rotate(-1.5deg); }
+.note:nth-child(even) { transform: rotate(1.5deg); }
 
 .spec-table { width: 100%; border-collapse: collapse; font-size: 0.98rem; }
 .spec-table th, .spec-table td { text-align: left; padding: 8px 6px; border-bottom: 1px dashed var(--parchment-deep); }
@@ -499,7 +489,5 @@ h1, h2, h3, .hand { font-family: var(--font-hand); }
 @media (max-width: 640px) {
   .two-col { grid-template-columns: 1fr; }
   .card-grid { grid-template-columns: 1fr; }
-  .bottle-fig { padding: 12px 0; display: flex; flex-direction: column; gap: 8px; }
-  .note, .note.left, .note.right { position: static; transform: none; max-width: none; text-align: left; }
-  .note::after { display: none; }
+  .bottle-fig { padding: 12px 0 4px; }
 }

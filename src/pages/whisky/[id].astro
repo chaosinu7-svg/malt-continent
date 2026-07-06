@@ -45,13 +45,6 @@ const onerr = `this.onerror=null;this.src='${placeholder}';`;
 const bottleSrc = withBase(w.bottle_image ?? `/assets/whiskies/${w.id}.png`);
 const annotations = w.annotations ?? [];
 
-// 手写标注小签：绝对定位在瓶身图两侧，交替排布
-const notePos = (i: number) => {
-  const side = i % 2 === 0 ? 'left' : 'right';
-  const top = 10 + Math.floor(i / 2) * 34 + (i % 2) * 16;
-  return { side, top };
-};
-
 const crumbs = [{ label: '地图', href: '/' }] as { label: string; href?: string }[];
 if (dist) {
   crumbs.push({ label: regionName, href: `/region/${dist.data.region}` });
@@ -68,12 +61,11 @@ crumbs.push({ label: w.name });
       <figure class="bottle-fig" data-rarity={w.rarity} style="margin:0;">
         <img src={bottleSrc} alt={w.name} onerror={onerr} />
         {
-          annotations.map((text, i) => {
-            const p = notePos(i);
-            return (
-              <span class={`note ${p.side}`} style={`top:${p.top}%;`}>{text}</span>
-            );
-          })
+          annotations.length > 0 && (
+            <div class="note-row">
+              {annotations.map((text) => <span class="note">{text}</span>)}
+            </div>
+          )
         }
       </figure>
 
