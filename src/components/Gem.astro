@@ -1,0 +1,15 @@
+---
+import { rarityGem } from '../utils/site';
+interface Props { rarity: number; size?: number; }
+const { rarity, size = 20 } = Astro.props;
+const g = rarityGem(rarity);
+---
+<svg class="gem" width={size} height={size} viewBox="0 0 24 24" role="img" aria-label={`珍稀度 ${rarity} 星 · ${g.name}`}>
+  <polygon points="7,6 17,6 21,10 12,22 3,10" fill={g.fill} stroke="#3a2e1e" stroke-width="1.3" stroke-linejoin="round" />
+  <polygon points="7,6 17,6 21,10 3,10" fill={g.light} opacity="0.85" />
+  <line x1="3" y1="10" x2="21" y2="10" stroke="#3a2e1e" stroke-width="0.9" />
+  <line x1="7" y1="6" x2="12" y2="22" stroke="#3a2e1e" stroke-width="0.7" opacity="0.7" />
+  <line x1="17" y1="6" x2="12" y2="22" stroke="#3a2e1e" stroke-width="0.7" opacity="0.7" />
+  <line x1="7" y1="6" x2="3" y2="10" stroke="#3a2e1e" stroke-width="0.7" opacity="0.7" />
+  <line x1="17" y1="6" x2="21" y2="10" stroke="#3a2e1e" stroke-width="0.7" opacity="0.7" />
+</svg>

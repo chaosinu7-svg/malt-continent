@@ -1,7 +1,8 @@
 ---
 import '../styles/global.css';
+import Gem from '../components/Gem.astro';
 import { withBase } from '../utils/withBase';
-import { SITE_NAME } from '../utils/site';
+import { SITE_NAME, RARITY_TITLES, rarityStars } from '../utils/site';
 
 interface Props {
   title?: string;
@@ -38,11 +39,13 @@ const pageTitle = title ? `${title} · ${SITE_NAME}` : SITE_NAME;
             <div class="legend-pop">
               <h3>珍稀度五档</h3>
               <ul>
-                <li><span class="stars">★☆☆☆☆</span>日常口粮</li>
-                <li><span class="stars">★★☆☆☆</span>进阶之选</li>
-                <li><span class="stars">★★★☆☆</span>稀有</li>
-                <li><span class="stars">★★★★☆</span>珍藏</li>
-                <li><span class="stars">★★★★★</span>传说</li>
+                {RARITY_TITLES.map((t, i) => (
+                  <li>
+                    <Gem rarity={i + 1} size={18} />
+                    <span class="stars">{rarityStars(i + 1)}</span>
+                    {t}
+                  </li>
+                ))}
               </ul>
             </div>
           </details>
