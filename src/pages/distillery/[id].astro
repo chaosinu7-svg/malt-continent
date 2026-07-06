@@ -2,9 +2,8 @@
 import { getCollection } from 'astro:content';
 import Base from '../../layouts/Base.astro';
 import Breadcrumb from '../../components/Breadcrumb.astro';
-import Gem from '../../components/Gem.astro';
 import { withBase } from '../../utils/withBase';
-import { REGION_FALLBACK_NAMES, rarityGem } from '../../utils/site';
+import { REGION_FALLBACK_NAMES } from '../../utils/site';
 
 export async function getStaticPaths() {
   const distilleries = await getCollection('distilleries');
@@ -99,8 +98,8 @@ if (d.stills !== undefined) dossierRows.push(['蒸馏器', `${d.stills} 座`]);
           <h2>{g.title}</h2>
           <div class="w-strip">
             {g.items.map((w) => (
-              <a class="w-card codex-frame" data-rarity={w.data.rarity} style={`--gem-glow:${rarityGem(w.data.rarity).glow}`} href={withBase(`/whisky/${w.data.id}`)}>
-                <span class="gem-badge"><Gem rarity={w.data.rarity} size={22} /></span>
+              <a class="w-card codex-frame" data-rarity={w.data.rarity} href={withBase(`/whisky/${w.data.id}`)}>
+                <span class="star-badge">{'★'.repeat(w.data.rarity)}</span>
                 <img src={bottleSrc(w)} alt={w.data.name} loading="lazy" onerror={onerr} />
                 <div class="w-name">{w.data.name}</div>
               </a>

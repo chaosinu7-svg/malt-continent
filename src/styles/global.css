@@ -78,7 +78,7 @@ h1, h2, h3, .hand { font-family: var(--font-hand); }
   right: 0;
   top: calc(100% + 8px);
   z-index: 50;
-  width: 258px;
+  width: 230px;
   padding: 12px 14px;
   background: var(--paper-card);
   border: 2px dashed var(--ink-soft);
@@ -87,7 +87,7 @@ h1, h2, h3, .hand { font-family: var(--font-hand); }
 }
 .legend-pop h3 { margin: 0 0 6px; font-size: 1rem; border-bottom: 1px dashed var(--ink-soft); padding-bottom: 4px; }
 .legend-pop ul { margin: 0; padding: 0; list-style: none; font-size: 0.9rem; }
-.legend-pop li { display: flex; align-items: center; gap: 8px; padding: 3px 0; }
+.legend-pop li { display: flex; gap: 8px; padding: 2px 0; }
 .legend-pop .stars { color: var(--amber); letter-spacing: 1px; min-width: 5.2em; }
 
 /* ---------- 面包屑 ---------- */
@@ -373,44 +373,57 @@ h1, h2, h3, .hand { font-family: var(--font-hand); }
   border-radius: 6px;
 }
 .w-card .w-name { font-family: var(--font-hand); font-size: 1rem; font-weight: 700; }
-
-/* ---------- 珍稀度：宝石分级 + 光效（色由 --gem-glow 驱动）---------- */
-/* 宝石色阶：白水晶→翡翠→蓝宝石→紫水晶→琥珀金。★1/★2 朴素无光；★3 静态微光；★4 脉动；★5 圣光呼吸。 */
-.gem { display: block; filter: drop-shadow(0 1px 0 rgba(0,0,0,0.15)); }
-.gem-badge {
+.w-card .star-badge {
   position: absolute;
-  top: -9px;
-  right: -7px;
-  line-height: 0;
+  top: -8px;
+  right: -6px;
+  font-size: 0.78rem;
+  color: #fff8e7;
+  background: var(--amber);
+  border: 1.5px solid var(--ink);
+  border-radius: 999px;
+  padding: 1px 8px;
   transform: rotate(6deg);
-  filter: drop-shadow(0 1px 2px rgba(58,46,30,0.35));
+  letter-spacing: 1px;
 }
-.w-card[data-rarity="3"] { box-shadow: 0 0 10px -2px rgba(var(--gem-glow), 0.6); }
-.w-card[data-rarity="4"] { animation: rarity-pulse 3.2s ease-in-out infinite; }
-.w-card[data-rarity="5"] { animation: rarity-halo 2.6s ease-in-out infinite; }
-.bottle-fig[data-rarity="3"] img { filter: drop-shadow(0 0 10px rgba(var(--gem-glow), 0.6)); }
-.bottle-fig[data-rarity="4"] img { animation: bottle-pulse 3.2s ease-in-out infinite; }
-.bottle-fig[data-rarity="5"] img { animation: bottle-halo 2.6s ease-in-out infinite; }
+
+/* ---------- 珍稀度光效（按 rarity 分级，网页动效表达珍稀度）---------- */
+/* ★1 日常 / ★2 进阶：无光，朴素。★3 稀有：静态微光。★4 珍藏：金光+缓慢脉动。★5 传说：圣光+呼吸。 */
+.w-card[data-rarity="3"] { box-shadow: 0 0 10px -2px rgba(200, 134, 27, 0.55); }
+.w-card[data-rarity="4"] {
+  box-shadow: 0 0 14px 0 rgba(200, 134, 27, 0.75);
+  animation: rarity-pulse 3.2s ease-in-out infinite;
+}
+.w-card[data-rarity="5"] {
+  box-shadow: 0 0 20px 2px rgba(230, 170, 40, 0.9), 0 0 6px 0 rgba(255, 220, 120, 0.6);
+  animation: rarity-halo 2.6s ease-in-out infinite;
+}
+.bottle-fig[data-rarity="3"] img { filter: drop-shadow(0 0 10px rgba(200, 134, 27, 0.55)); }
+.bottle-fig[data-rarity="4"] img {
+  animation: bottle-pulse 3.2s ease-in-out infinite;
+}
+.bottle-fig[data-rarity="5"] img {
+  animation: bottle-halo 2.6s ease-in-out infinite;
+}
 @keyframes rarity-pulse {
-  0%, 100% { box-shadow: 0 0 12px -1px rgba(var(--gem-glow), 0.55); }
-  50% { box-shadow: 0 0 18px 1px rgba(var(--gem-glow), 0.95); }
+  0%, 100% { box-shadow: 0 0 12px -1px rgba(200, 134, 27, 0.55); }
+  50% { box-shadow: 0 0 18px 1px rgba(200, 134, 27, 0.9); }
 }
 @keyframes rarity-halo {
-  0%, 100% { box-shadow: 0 0 16px 0 rgba(var(--gem-glow), 0.7); }
-  50% { box-shadow: 0 0 28px 4px rgba(var(--gem-glow), 1); }
+  0%, 100% { box-shadow: 0 0 16px 0 rgba(230, 170, 40, 0.7), 0 0 5px 0 rgba(255, 220, 120, 0.5); }
+  50% { box-shadow: 0 0 26px 4px rgba(230, 170, 40, 1), 0 0 10px 2px rgba(255, 225, 140, 0.75); }
 }
 @keyframes bottle-pulse {
-  0%, 100% { filter: drop-shadow(0 0 12px rgba(var(--gem-glow), 0.55)); }
-  50% { filter: drop-shadow(0 0 20px rgba(var(--gem-glow), 0.95)); }
+  0%, 100% { filter: drop-shadow(0 0 12px rgba(200, 134, 27, 0.55)); }
+  50% { filter: drop-shadow(0 0 20px rgba(200, 134, 27, 0.95)); }
 }
 @keyframes bottle-halo {
-  0%, 100% { filter: drop-shadow(0 0 16px rgba(var(--gem-glow), 0.7)); }
-  50% { filter: drop-shadow(0 0 30px rgba(var(--gem-glow), 1)); }
+  0%, 100% { filter: drop-shadow(0 0 16px rgba(230, 170, 40, 0.7)); }
+  50% { filter: drop-shadow(0 0 28px rgba(255, 210, 110, 1)); }
 }
 @media (prefers-reduced-motion: reduce) {
   .w-card[data-rarity], .bottle-fig[data-rarity] img { animation: none !important; }
 }
-.rarity-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 
 /* ---------- 单品页 ---------- */
 .bottle-fig { position: relative; padding: 34px 12px; }

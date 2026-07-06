@@ -2,9 +2,8 @@
 import { getCollection } from 'astro:content';
 import Base from '../../layouts/Base.astro';
 import Breadcrumb from '../../components/Breadcrumb.astro';
-import Gem from '../../components/Gem.astro';
 import { withBase } from '../../utils/withBase';
-import { REGION_FALLBACK_NAMES, rarityStars, rarityTitle, rarityGem } from '../../utils/site';
+import { REGION_FALLBACK_NAMES, rarityStars, rarityTitle } from '../../utils/site';
 
 export async function getStaticPaths() {
   const whiskies = await getCollection('whiskies');
@@ -66,7 +65,7 @@ crumbs.push({ label: w.name });
     <Breadcrumb items={crumbs} />
 
     <div class="two-col">
-      <figure class="bottle-fig" data-rarity={w.rarity} style={`margin:0;--gem-glow:${rarityGem(w.rarity).glow}`}>
+      <figure class="bottle-fig" data-rarity={w.rarity} style="margin:0;">
         <img src={bottleSrc} alt={w.name} onerror={onerr} />
         {
           annotations.map((text, i) => {
@@ -100,8 +99,7 @@ crumbs.push({ label: w.name });
         </section>
 
         <section class="rarity-box codex-frame">
-          <div class="rarity-head">
-            <Gem rarity={w.rarity} size={26} />
+          <div>
             <span class="stars">{rarityStars(w.rarity)}</span>
             <span class="rank-title">{rarityTitle(w.rarity)}</span>
           </div>
