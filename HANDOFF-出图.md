@@ -2,7 +2,7 @@
 
 > 给新对话（Codex 或任意出图 agent）看的自包含手册。目标只有一个词：**一致性**。
 > 项目根目录：`~/Desktop/malt-continent/`　线上：https://chaosinu7-svg.github.io/malt-continent/
-> 更新时间：2026-07-03
+> 更新时间：2026-07-06（瓶身图已完成 20/82）
 
 ---
 
@@ -10,17 +10,21 @@
 
 一个迷宫饭漫画风的威士忌图鉴站。网站代码、全部文案、地图圆窗引擎**都已完工上线**，现在**只差图**。你要做的是纯出图 + 落盘，不改代码。图落到约定路径、用约定文件名，网站自动生效（缺图时显示"图鉴插画·待补"占位框，所以可以分批慢慢补，不丢人）。
 
-### 当前进度快照（以硬盘文件为准，别信聊天记录）
+### 当前进度快照（2026-07-06，以硬盘文件为准，别信聊天记录）
 
 | 素材 | 进度 | 存放路径 |
 |---|---|---|
 | 世界地图底图 | ✅ 1/1 | `public/assets/map/world-map.png` |
 | 酒厂立绘 | ✅ 27/27 | `public/assets/distilleries/<酒厂id>.png` |
-| 产区横幅 | ⚠️ 6/6 已上线但**需重画**（比例观感偏拉伸） | `public/assets/regions/<产区id>-banner.png` |
+| 产区横幅 | ⚠️ 6/6 已上线但**建议重画**（比例观感偏拉伸，见批次③） | `public/assets/regions/<产区id>-banner.png` |
+| **瓶身图** | 🔵 **20/82**（苏格兰差 talisker×3 + springbank-longrow 就齐） | `public/assets/whiskies/<单品id>.png` |
 | **圆窗地区图** | ⬜ **0/7** | `public/assets/map/inset-<insetid>.png` |
-| **瓶身图** | ⬜ **0/82** | `public/assets/whiskies/<单品id>.png` |
 
-**你的任务优先级：① 瓶身图 82 张（最大头）→ ② 圆窗地区图 7 张 → ③ 横幅重画 6 张。**
+**你的任务优先级：① 瓶身图（还差 62 张，最大头）→ ② 圆窗地区图 7 张 → ③ 横幅重画 6 张。**
+
+> ⚠️ 别重复画已完成的！已落盘的 20 张（不要再生成）：
+> macallan-12-sherry / macallan-18-sherry / macallan-1926 / glenfiddich-12 / glenfiddich-15-solera / glenfiddich-snow-phoenix / laphroaig-10 / laphroaig-quarter-cask / laphroaig-cairdeas-2024 / ardbeg-10 / ardbeg-uigeadail / ardbeg-supernova-2019 / glenmorangie-original-12 / glenmorangie-quinta-ruban-14 / glenmorangie-signet / auchentoshan-12 / auchentoshan-american-oak / auchentoshan-three-wood / springbank-10 / springbank-15
+> 判断方法：开画前 `ls public/assets/whiskies/` 看已有哪些，只画没有的。
 
 ---
 
@@ -96,7 +100,15 @@ for f in whiskies/*.png distilleries/*.png map/*.png regions/*.png; do md5 -q "$
 例：`yamazaki-18` 标签写 `"YAMAZAKI" "18 YEARS"`；`johnnie-walker-blue` 标签写 `"JOHNNIE WALKER" "BLUE LABEL"`；`macallan-1926` 标签写 `"THE MACALLAN" "1926"`。英文名以每款 md 的 `name_en` 为准。
 
 ### 建议批次顺序（每批 5 张，按酒厂聚在一起画，风味相近好统一）
-苏格兰各厂 → 日本各厂 → 爱尔兰 → 美国 → 印度/台湾 → 调和名门（尊尼获加 4 款）。完整 82 个 id 见文末附录。
+从这里接着画（苏格兰只剩收尾）：
+1. **收尾苏格兰**（4 张）：talisker-10 / talisker-18 / talisker-distillers-edition / springbank-longrow-peated
+2. **日本**（12）：山崎 3 / 余市 3 / 白州 3 / 秩父 3　⚠️ 秩父 the-first 是 ★5，压暗打光
+3. **爱尔兰**（12）：尊美醇 3 / 布什米尔 3 / 帝霖 3 / 沃特福德 3
+4. **美国**（12）：占边 3 / 杰克丹尼 3 / 水牛足迹 3（含 pappy-15 ★5）/ 美格 3
+5. **印度**（12）：雅沐特 3 / 保罗约翰 3 / 蓝普 3 / 印德里 3（含 diwali ★5）
+6. **台湾 + 调和名门**（10）：噶玛兰 3 / 南投 3 / 尊尼获加 4（红→黑→蓝→幽灵，★1→★4 梯度）
+
+完整"待画 62 张"清单见文末附录。★5 单品（明暗度要拉到最暗调+聚光）：macallan-1926✅ / chichibu-the-first / buffalo-trace-pappy-15 / indri-diwali-collectors-edition / johnnie-walker-blue-ghost-rare 是 ★4。
 
 ---
 
@@ -152,27 +164,38 @@ for f in whiskies/*.png distilleries/*.png map/*.png regions/*.png; do md5 -q "$
 ## 6. 每批画完，怎么交给 Claude 验收上线
 
 你只管出图落盘。落盘后回主对话（Claude）说一句，例如：
-> "瓶身图苏格兰批画完了，在 public/assets/whiskies/"
+> "瓶身图日本山崎批画完了，在 public/assets/whiskies/"
 
-Claude 会：① md5 全库查重 ② 抽查画质与辨识度 ③ 起预览截图看上墙效果 ④ git 提交推送上线。
+Claude 会：① md5 全库查重 ② 抽查画质与辨识度（酒标文字/明暗度分档）③ 起预览看上墙效果 ④ git 提交推送上线。
 你**不需要**自己 git commit / push（避免把 `generated-images-contact-sheet.jpg` 这类临时拼版图误传——它已被 .gitignore 忽略）。
+
+### 实战经验（前几批踩过的坑，务必照做）
+- **落盘尺寸**：出图原图常是 1024×1536，落盘请压成规格 **800×1200**（比例都是 2:3 不变形）。没压也行，Claude 会补压。
+- **别重画已完成的**：开画前 `ls public/assets/whiskies/` 看已有哪些——前面就发生过把已上线的 glenmorangie-signet/quinta 又画了一遍白费 token。只画缺的。
+- **落盘路径别搞错**：`public/assets/whiskies/<单品id>.png`。文件名 = md 的 id，一字不差。
+- **珍稀度光效网页已做好**（★3 微光 / ★4 金光脉动 / ★5 琥珀内透光+金色星尘），所以瓶身图**只管画明暗度**，别在图里烤发光/星星，网页会叠。
 
 ---
 
-## 附录：82 个单品 id 完整清单（瓶身图文件名照此）
+## 附录：瓶身图待画清单（62 张，截至 2026-07-06）
 
-苏格兰：`macallan-12-sherry` `macallan-18-sherry` `macallan-1926` `glenfiddich-12` `glenfiddich-15-solera` `glenfiddich-snow-phoenix` `laphroaig-10` `laphroaig-quarter-cask` `laphroaig-cairdeas-2024` `ardbeg-10` `ardbeg-uigeadail` `ardbeg-supernova-2019` `glenmorangie-original-12` `glenmorangie-quinta-ruban-14` `glenmorangie-signet` `auchentoshan-12` `auchentoshan-american-oak` `auchentoshan-three-wood` `springbank-10` `springbank-15` `springbank-longrow-peated` `talisker-10` `talisker-18` `talisker-distillers-edition`
+> ✅ 已完成 20 张见第 0 节的"别重复画"框。下面是**还没画的 62 张**，画完一款就等于消一个。
 
-日本：`yamazaki-12` `yamazaki-18` `yamazaki-distillers-reserve` `yoichi-10` `yoichi-single-malt` `yoichi-apple-brandy-finish` `hakushu-12` `hakushu-18-peated-malt` `hakushu-distillers-reserve` `chichibu-the-first` `chichibu-on-the-way` `chichibu-london-edition`
+苏格兰收尾（4）：`talisker-10` `talisker-18` `talisker-distillers-edition` `springbank-longrow-peated`
 
-爱尔兰：`jameson-original` `jameson-black-barrel` `jameson-18` `bushmills-10` `bushmills-16` `bushmills-black-bush` `teeling-small-batch` `teeling-single-malt` `teeling-24` `waterford-bannow-island` `waterford-sheestown` `waterford-biodynamic-luna`
+日本（12）：`yamazaki-12` `yamazaki-18` `yamazaki-distillers-reserve` `yoichi-10` `yoichi-single-malt` `yoichi-apple-brandy-finish` `hakushu-12` `hakushu-18-peated-malt` `hakushu-distillers-reserve` `chichibu-the-first`(★5) `chichibu-on-the-way` `chichibu-london-edition`
 
-美国：`jim-beam-white-label` `jim-beam-black` `jim-beam-bookers` `jack-daniels-old-no-7` `jack-daniels-gentleman-jack` `jack-daniels-single-barrel` `buffalo-trace-bourbon` `buffalo-trace-eagle-rare-10` `buffalo-trace-pappy-15` `makers-mark-bourbon` `makers-mark-46` `makers-mark-cask-strength`
+爱尔兰（12）：`jameson-original` `jameson-black-barrel` `jameson-18` `bushmills-10` `bushmills-16` `bushmills-black-bush` `teeling-small-batch` `teeling-single-malt` `teeling-24` `waterford-bannow-island` `waterford-sheestown` `waterford-biodynamic-luna`
 
-印度：`amrut-fusion` `amrut-peated` `amrut-portonova` `paul-john-brilliance` `paul-john-bold` `paul-john-edited` `rampur-double-cask` `rampur-asava` `rampur-jugalbandi` `indri-dru` `indri-trini` `indri-diwali-collectors-edition`
+美国（12）：`jim-beam-white-label` `jim-beam-black` `jim-beam-bookers` `jack-daniels-old-no-7` `jack-daniels-gentleman-jack` `jack-daniels-single-barrel` `buffalo-trace-bourbon` `buffalo-trace-eagle-rare-10` `buffalo-trace-pappy-15`(★5) `makers-mark-bourbon` `makers-mark-46` `makers-mark-cask-strength`
 
-台湾：`kavalan-classic` `kavalan-solist-vinho-barrique` `kavalan-solist-fino` `nantou-omar-bourbon` `nantou-omar-sherry` `nantou-omar-plum`
+印度（12）：`amrut-fusion` `amrut-peated` `amrut-portonova` `paul-john-brilliance` `paul-john-bold` `paul-john-edited` `rampur-double-cask` `rampur-asava` `rampur-jugalbandi` `indri-dru` `indri-trini` `indri-diwali-collectors-edition`(★5)
 
-调和名门：`johnnie-walker-red` `johnnie-walker-black-12` `johnnie-walker-blue` `johnnie-walker-blue-ghost-rare`
+台湾（6）：`kavalan-classic` `kavalan-solist-vinho-barrique` `kavalan-solist-fino` `nantou-omar-bourbon` `nantou-omar-sherry` `nantou-omar-plum`
+
+调和名门·尊尼获加（4）：`johnnie-walker-red` `johnnie-walker-black-12` `johnnie-walker-blue` `johnnie-walker-blue-ghost-rare`(★4)
+
+> 最新"待画"清单随时可自查：
+> `comm -23 <(ls src/content/whiskies/|sed 's/.md//'|sort) <(ls public/assets/whiskies/|sed 's/.png//'|sort)`
 
 > 共 82 款。画每瓶前务必读 `src/content/whiskies/<id>.md` 拿 rarity 决定打光。
